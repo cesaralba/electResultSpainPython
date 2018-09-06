@@ -1,3 +1,6 @@
 .idea
 doc
 *.iml
+*/*.iml
+*/__pycache__
+__pycache__
