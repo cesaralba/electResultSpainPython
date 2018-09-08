@@ -131,7 +131,8 @@ def readFileZIP(filename):
     if setInfo['adjuntaFich0810']:
         result['datosDipSupMunicResult'] = readPandaFWF(zh, files, '10', '08')
 
-    return result
+    # Elimina entradas que han dado problema con la carga
+    return {clave: result[clave] for clave in result if result[clave] is not None}
 
 
 ################################################################################################################
