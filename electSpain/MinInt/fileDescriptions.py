@@ -178,7 +178,7 @@ fieldDescriptions = {
         (1, "numVuelta", np.uint32),
         (2, "codAut", np.uint32),  # En el caso de Total Nacional, llevará 99
         (2, "codProv", np.uint32),  # 99 si se trata de datos a nivel Total Comunidad o Total Nacional
-        (1, "codDistr", np.uint32),  # 9 en datos a nivel Total Provincial, Comunidad o Nacional
+        (1, "numDistr", np.uint32),  # 9 en datos a nivel Total Provincial, Comunidad o Nacional
         (50, "nomAmbito", str),
         (8, "pobDerecho", np.uint32),
         (5, "numMesas", np.uint32),
@@ -204,7 +204,7 @@ fieldDescriptions = {
         (1, "numVuelta", np.uint32),
         (2, "codAut", np.uint32),  # En el caso de Total Nacional, llevará 99
         (2, "codProv", np.uint32),  # 99 si se trata de datos a nivel Total Comunidad o Total Nacional
-        (1, "codDistr", np.uint32),  # 9 en datos a nivel Total Provincial, Comunidad o Nacional
+        (1, "numDistr", np.uint32),  # 9 en datos a nivel Total Provincial, Comunidad o Nacional
         (6, "codCand", np.uint32),
         (8, "votCand", np.uint32),
         (5, "numPersElegidas", np.uint32)
