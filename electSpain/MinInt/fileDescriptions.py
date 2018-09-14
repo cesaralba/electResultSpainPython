@@ -111,7 +111,7 @@ fieldDescriptions = {
         (2, "mesElec", np.uint32),
         (1, "numVuelta", np.uint32),
         (2, "codProv", np.uint32),  # (99 en elecciones al Parlamento Europeo)
-        (1, "codDistr", np.uint32),  #Distrito electoral 9 en elecciones que no tienen este tipo de circunscripción
+        (1, "codDistr", np.uint32),  # Distrito electoral 9 en elecciones que no tienen este tipo de circunscripción
         (3, "codMunic", np.uint32),  # (elecciones municipales) o del Senador (Senado). En el resto de procesos 999
         (6, "codCand", np.uint32),
         (3, "numOrdenPersCand", np.uint32),
