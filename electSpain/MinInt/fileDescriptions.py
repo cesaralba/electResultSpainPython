@@ -111,7 +111,7 @@ fieldDescriptions = {
         (2, "mesElec", np.uint32),
         (1, "numVuelta", np.uint32),
         (2, "codProv", np.uint32),  # (99 en elecciones al Parlamento Europeo)
-        (1, "codDistr", np.uint32),  # 9 en elecciones que no tienen este tipo de circunscripción
+        (1, "codDistr", np.uint32),  #Distrito electoral 9 en elecciones que no tienen este tipo de circunscripción
         (3, "codMunic", np.uint32),  # (elecciones municipales) o del Senador (Senado). En el resto de procesos 999
         (6, "codCand", np.uint32),
         (3, "numOrdenPersCand", np.uint32),
@@ -135,9 +135,9 @@ fieldDescriptions = {
         (2, "codAut", np.uint32),
         (2, "codProv", np.uint32),
         (3, "codMunic", np.uint32),
-        (2, "numDistr", np.uint32),  # 99 si es el total municipal
+        (2, "numDistr", np.uint32),  # Distrito municipal 99 si es el total municipal
         (100, "nomMunic", str),  # o del distrito municipal
-        (1, "codDistr", np.uint32),  # 0 en elecciones que no tienen este tipo de circunscripción
+        (1, "codDistr", np.uint32),  # Distrito electoral 0 en elecciones que no tienen este tipo de circunscripción
         (3, "codPJ", np.uint32),
         (3, "codDP", np.uint32),
         (3, "codCom", np.uint32),  # Comarca
@@ -165,7 +165,7 @@ fieldDescriptions = {
         (1, "numVuelta", np.uint32),
         (2, "codProv", np.uint32),
         (3, "codMunic", np.uint32),
-        (2, "numDistr", np.uint32),  # 99 si es el total municipal
+        (2, "numDistr", np.uint32),  # Distrito municipal 99 si es el total municipal
         (6, "codCand", np.uint32),
         (8, "votCand", np.uint32),
         (3, "numPersElegidas", np.uint32)
@@ -178,7 +178,7 @@ fieldDescriptions = {
         (1, "numVuelta", np.uint32),
         (2, "codAut", np.uint32),  # En el caso de Total Nacional, llevará 99
         (2, "codProv", np.uint32),  # 99 si se trata de datos a nivel Total Comunidad o Total Nacional
-        (1, "numDistr", np.uint32),  # 9 en datos a nivel Total Provincial, Comunidad o Nacional
+        (1, "codDistr", np.uint32),  # Distrito electoral 9 en datos a nivel Total Provincial, Comunidad o Nacional
         (50, "nomAmbito", str),
         (8, "pobDerecho", np.uint32),
         (5, "numMesas", np.uint32),
@@ -204,7 +204,7 @@ fieldDescriptions = {
         (1, "numVuelta", np.uint32),
         (2, "codAut", np.uint32),  # En el caso de Total Nacional, llevará 99
         (2, "codProv", np.uint32),  # 99 si se trata de datos a nivel Total Comunidad o Total Nacional
-        (1, "numDistr", np.uint32),  # 9 en datos a nivel Total Provincial, Comunidad o Nacional
+        (1, "codDistr", np.uint32),  # Distrito electoral 9 en datos a nivel Total Provincial, Comunidad o Nacional
         (6, "codCand", np.uint32),
         (8, "votCand", np.uint32),
         (5, "numPersElegidas", np.uint32)
