@@ -97,7 +97,7 @@ def aplanaResultados(reselect, columnaDato='votCand', ficherosATratar=None):
 
     :param reselect: diccionario de dataframes con los datos cargados del ZIP
     :param columnaDato: valor del fichero de resultados que poner como resultado de la candidatura: pueden ser 'votCand'
-            o 'numPersElegidas'
+            o 'numPersElegidas'. OJO! 'datosMesasResult' no tiene la columna 'numPersElegidas'.
     :param ficherosATratar: Uno de los siguientes: datosMunicResult, datosSupMunicResult, datosMesasResult
                             Lista con alguna combinación de los anteriores
                             None -> Todos los ficheros que esten contenidos en el ZIP
@@ -133,18 +133,24 @@ def aplanaResultados(reselect, columnaDato='votCand', ficherosATratar=None):
 
         claveSinResult = clave.replace("Result", "")
 
+        if claveSinResult not in reselect:
+            print("aplanaResultados: clave '%s' (datos territorio) no conocida." % clave)
+            continue
+
         dfDatos = reselect[claveSinResult]
         dfDatosIndexed = dfDatos.set_index(clavesParaIndexar(dfDatos)).sort_index()
         if colsControl[columnaDato] not in dfDatosIndexed:
-            raise KeyError("aplanaResultados: columna de control '%s' no est� en dataframe de datos '%s'" %
-                           (colsControl[columnaDato], claveSinResult))
+            print("aplanaResultados: columna de control '%s' no est� en dataframe de datos '%s'" %
+                  (colsControl[columnaDato], claveSinResult))
+            continue
         dfDatosIndexed.columns = pd.MultiIndex.from_tuples([('datosTerr', x) for x in dfDatosIndexed.columns])
 
         # Añade la informaci�n de cand nacional a los resultados
         dfResults = reselect[clave].merge(infoCands)
         if columnaDato not in dfResults:
-            raise KeyError("aplanaResultados: columna de datos '%s' no est� en dataframe de resultados '%s'" %
-                           (columnaDato, clave))
+            print("aplanaResultados: columna de datos '%s' no est� en dataframe de resultados '%s'" %
+                   (columnaDato, clave))
+            continue
 
         claves2index = clavesParaIndexar(dfResults) + ['siglaCand']
         claves2filter = claves2index + [columnaDato]
