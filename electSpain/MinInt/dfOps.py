@@ -148,8 +148,8 @@ def aplanaResultados(reselect, columnaDato='votCand', ficherosATratar=None):
         # Añade la informaci�n de cand nacional a los resultados
         dfResults = reselect[clave].merge(infoCands)
         if columnaDato not in dfResults:
-            print("aplanaResultados: columna de datos '%s' no est� en dataframe de resultados '%s'" %
-                   (columnaDato, clave))
+            print("aplanaResultados: columna de datos '%s' no est� en dataframe de resultados '%s'" % (columnaDato,
+                                                                                                       clave))
             continue
 
         claves2index = clavesParaIndexar(dfResults) + ['siglaCand']
