@@ -35,6 +35,10 @@ supV2011=planosV2011['datosSupMunicResult']
 supV2015=planosV2015['datosSupMunicResult']
 supV2016=planosV2016['datosSupMunicResult']
 
+supE2011=planosE2011['datosSupMunicResult']
+supE2015=planosE2015['datosSupMunicResult']
+supE2016=planosE2016['datosSupMunicResult']
+
 madridV2011 = supV2011.loc[(12,28)]
 madridV2015 = supV2015.loc[(12,28)]
 madridV2016 = supV2016.loc[(12,28)]

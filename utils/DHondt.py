@@ -28,7 +28,6 @@ def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('
         else:
             print("DHondt: clave '%s' para numero de votos en blanco no está en fila." % numescs)
             return None
-
     else:
         raise TypeError("Esperaba una Serie (fila procedente del Dataframe")
 
@@ -40,20 +39,19 @@ def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('
 
     cocientes = [(x, y + 1, umbVotos[x] / (y + 1), umbVotos[x]) for x in umbVotos.index for y in range(VnumEscs)]
     cocientes.sort(key=lambda x: x[2], reverse=True)
-    # for i in range(len(cocientes)):
-    #     print(i+1, " = ",cocientes[i])
     elected = cocientes[:VnumEscs]
-    # print(elected)
-    # for i in elected:
-    #     print("--->",i)
 
     ultEleg = cocientes[VnumEscs - 1]
     primNoEleg = cocientes[VnumEscs]
     difUltEsc = ((ultEleg[2] - primNoEleg[2]) * primNoEleg[1])
 
-    print("UltEleg: %s primNoEleg: %s" % (ultEleg, primNoEleg))
+    dictElegidos = dict(Counter([x[0] for x in elected]))
+    costeAsiento = {('costeAsiento', x): umbVotos[x]/dictElegidos[x] for x in dictElegidos}
+    sinEsc = {x: np.uint32(0) for x in actVotos.index if x not in dictElegidos}
+    votosSinEsc = {('votosSinAsiento', x): actVotos[x] if x not in dictElegidos else 0 for x in actVotos.index}
+    dictElegidos.update(sinEsc)
 
-    elegidos = pd.Series(dict(Counter([x[0] for x in elected])))
+    elegidos = pd.Series(dictElegidos)
     # print(elegidos.sum())
     elegidos.index = pd.MultiIndex.from_tuples([('asignados', x) for x in elegidos.index])
     votosUmbral = pd.Series({('votosUmbral', 'pasa'): umbVotos.sum(), ('votosUmbral', 'noPasa'): noPasaUmbral},
@@ -61,7 +59,10 @@ def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('
     ultimoSi = pd.Series({('ultElegido', 'Partido'): ultEleg[0], ('ultElegido', 'Posicion'): ultEleg[1]})
     primeroNo = pd.Series({('primNoElegido', 'Partido'): primNoEleg[0], ('primNoElegido', 'Posicion'): primNoEleg[1]})
     diferUltimo = np.ceil(pd.Series({('difUltEleg', 'votos'): difUltEsc}))
+    costeAsientoS = pd.Series(costeAsiento)
+    votosSinEscS = pd.Series(votosSinEsc)
 
-    resultados = pd.concat([elegidos, votosUmbral, ultimoSi, primeroNo, diferUltimo], sort=False)
+    resultados = pd.concat([elegidos, votosUmbral, ultimoSi, primeroNo, diferUltimo, costeAsientoS, votosSinEscS],
+                           sort=False)
 
     return resultados
