@@ -1,5 +1,5 @@
 
-from collections import Sequence
+from collections import Sequence, defaultdict
 
 import numpy as np
 import pandas as pd
@@ -9,6 +9,7 @@ colsControl = dict(votCand='votCands', numPersElegidas='numEscs')
 colsIDProc = ['tipoElec', 'yearElec', 'mesElec', 'numVuelta']
 colsIDEnt = ['codAut', 'codProv', 'codMunic', 'numDistr', 'codSeccion', 'codMesa']
 columnsIdent = colsIDProc + colsIDEnt
+col2remove = ['codDP', 'codCom']
 
 
 def clavesParaIndexar(dataframe):
@@ -138,7 +139,9 @@ def aplanaResultados(reselect, columnaDato='votCand', ficherosATratar=None):
             continue
 
         dfDatos = reselect[claveSinResult]
-        dfDatosIndexed = dfDatos.set_index(clavesParaIndexar(dfDatos)).sort_index()
+        actRemoval = [x for x in col2remove if x in dfDatos.columns]
+
+        dfDatosIndexed = dfDatos.set_index(clavesParaIndexar(dfDatos)).drop(labels=actRemoval, axis=1).sort_index()
         if colsControl[columnaDato] not in dfDatosIndexed:
             print("aplanaResultados: columna de control '%s' no est� en dataframe de datos '%s'" %
                   (colsControl[columnaDato], claveSinResult))
@@ -175,6 +178,37 @@ def aplanaResultados(reselect, columnaDato='votCand', ficherosATratar=None):
             return result[clave]
 
     return result
+
+
+def recolocaTerrColumns(df):
+    iTerr = ['codAut', 'codProv', 'codDistr', 'codPJ', 'codMunic', 'numDistr', 'codSeccion', 'codMesa', 'nomAmbito',
+             'nomMunic']
+
+    groupKeys = defaultdict(list)
+    renamedColumns = [(('idTerr' if t[1] in iTerr else t[0]), t[1]) for t in df.columns.tolist()]
+
+    df.columns = pd.MultiIndex.from_tuples(renamedColumns)
+
+    for t in renamedColumns:
+        groupKeys[t[0]].append(t[1])
+
+    columnList = list()
+
+    for k in iTerr:
+        if k in groupKeys['idTerr']:
+            columnList.append(('idTerr', k))
+
+    for g in ['idProc', 'datosTerr', 'numPersElegidas', 'votCand']:
+        if g in groupKeys:
+            columnList = columnList + [(g, x) for x in groupKeys[g]]
+
+    return df[columnList]
+
+
+def addExtraInfo(resplanos):
+    noidx = {x: recolocaTerrColumns(resplanos[x].reset_index(col_level=1, col_fill='idTerr')) for x in resplanos}
+
+    return noidx
 
 
 ################################################################################################################

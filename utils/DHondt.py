@@ -46,7 +46,7 @@ def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('
     difUltEsc = ((ultEleg[2] - primNoEleg[2]) * primNoEleg[1])
 
     dictElegidos = dict(Counter([x[0] for x in elected]))
-    costeAsiento = {('costeAsiento', x): umbVotos[x]/dictElegidos[x] for x in dictElegidos}
+    costeAsiento = {('costeAsiento', x): umbVotos[x] / dictElegidos[x] for x in dictElegidos}
     sinEsc = {x: np.uint32(0) for x in actVotos.index if x not in dictElegidos}
     votosSinEsc = {('votosSinAsiento', x): actVotos[x] if x not in dictElegidos else 0 for x in actVotos.index}
     dictElegidos.update(sinEsc)
