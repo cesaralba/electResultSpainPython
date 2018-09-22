@@ -205,10 +205,23 @@ def recolocaTerrColumns(df):
     return df[columnList]
 
 
-def addExtraInfo(resplanos):
-    noidx = {x: recolocaTerrColumns(resplanos[x].reset_index(col_level=1, col_fill='idTerr')) for x in resplanos}
+def getExtraInfo(reselect):
+    result = dict()
 
-    return noidx
+    if 'datosMunic' in reselect:
+        dfwrk = reselect['datosMunic']
+        result['municData'] = dfwrk[dfwrk['numDistr'] == 99][['codProv', 'codMunic', 'codPJ', 'codDistr', 'nomMunic']]
+        result['municDistrData'] = dfwrk[dfwrk['numDistr'] != 99][
+            ['codProv', 'codMunic', 'numDistr', 'nomMunic']].rename({'nomMunic': 'nomDistr'}, axis=1)
+
+    if 'datosSupMunic' in reselect:
+        dfwrk = reselect['datosSupMunic']
+        result['provData'] = dfwrk[dfwrk['codProv'] != 99][['codProv', 'nomAmbito']].rename({'nomAmbito': 'nomProv'},
+                                                                                            axis=1)
+        result['autData'] = dfwrk[(dfwrk['codProv'] == 99) & (dfwrk['codAut'] != 99)][['codAut', 'nomAmbito']].rename(
+            {'nomAmbito': 'nomAut'}, axis=1)
+
+    return result
 
 
 ################################################################################################################
