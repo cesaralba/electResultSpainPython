@@ -3,7 +3,9 @@ import numpy as np
 from collections import Counter
 
 
-def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('datosTerr', 'votBlanco'), umbral=0.0):
+def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('datosTerr', 'votBlanco'), umbral=0.0,
+           calculaCosteAsiento=False, calculaUltimoElecto=False, calculaVotosSinEsc=False,
+           calculaCortadosUmabral=False):
     if isinstance(fila, pd.core.series.Series):
         if votos in fila.index:
             Dvotos = fila[votos]
@@ -32,46 +34,69 @@ def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('
     actVotos = Dvotos[~Dvotos.isna()].astype(np.uint64)
     sumVotos = sum(actVotos) + VvotBlanco
     umbVotos = Dvotos[Dvotos > (sumVotos * umbral)]
-    noPasaUmbral = Dvotos[~(Dvotos > (sumVotos * umbral))].sum()
-    # print("No pasa umbral: %i" % noPasaUmbral)
 
-    cocientes = [(x, y + 1, umbVotos[x] / (y + 1), umbVotos[x]) for x in umbVotos.index for y in range(VnumEscs)]
-    cocientes.sort(key=lambda x: x[2], reverse=True)
-    elected = cocientes[:VnumEscs]
+    listaSeriesFinal = list()
 
-    ultEleg = cocientes[VnumEscs - 1]
-    if len(cocientes) > VnumEscs:
-        primNoEleg = cocientes[VnumEscs]
-        difUltEsc = ((ultEleg[2] - primNoEleg[2]) * primNoEleg[1])
+    # Calcula electos
+    if sum(actVotos) > 0:
+        cocientes = [(x, y + 1, umbVotos[x] / (y + 1), umbVotos[x]) for x in umbVotos.index for y in range(VnumEscs)]
+        cocientes.sort(key=lambda x: x[2], reverse=True)
+        elected = cocientes[:VnumEscs]
+        ultEleg = cocientes[VnumEscs - 1]
     else:
-        primNoEleg = None
-        difUltEsc = None
+        cocientes = []
+        elected = []
+        ultEleg = None
 
     dictElegidos = dict(Counter([x[0] for x in elected]))
-    costeAsiento = {('costeAsiento', x): umbVotos[x] / dictElegidos[x] for x in dictElegidos}
     sinEsc = {x: np.uint32(0) for x in actVotos.index if x not in dictElegidos}
-    votosSinEsc = {('votosSinAsiento', x): actVotos[x] if x not in dictElegidos else 0 for x in actVotos.index}
     dictElegidos.update(sinEsc)
-
     elegidos = pd.Series(dictElegidos)
-    # print(elegidos.sum())
     elegidos.index = pd.MultiIndex.from_tuples([('asignados', x) for x in elegidos.index])
-    votosUmbral = pd.Series({('votosUmbral', 'pasa'): umbVotos.sum(), ('votosUmbral', 'noPasa'): noPasaUmbral},
-                            dtype=np.uint64)
-    ultimoSi = pd.Series({('ultElegido', 'Partido'): ultEleg[0], ('ultElegido', 'Posicion'): ultEleg[1]})
 
-    if primNoEleg is None:
-        primeroNo = pd.Series({('primNoElegido', 'Partido'): None, ('primNoElegido', 'Posicion'): None})
-        diferUltimo = pd.Series({('difUltEleg', 'votos'): None})
-    else:
-        primeroNo = pd.Series(
-            {('primNoElegido', 'Partido'): primNoEleg[0], ('primNoElegido', 'Posicion'): primNoEleg[1]})
-        diferUltimo = np.ceil(pd.Series({('difUltEleg', 'votos'): difUltEsc}))
+    listaSeriesFinal.append(elegidos)
 
-    costeAsientoS = pd.Series(costeAsiento)
-    votosSinEscS = pd.Series(votosSinEsc)
+    if calculaCosteAsiento:
+        costeAsiento = {('costeAsiento', x): umbVotos[x] / dictElegidos[x] for x in dictElegidos}
+        costeAsientoS = pd.Series(costeAsiento)
+        listaSeriesFinal.append(costeAsientoS)
 
-    resultados = pd.concat([elegidos, votosUmbral, ultimoSi, primeroNo, diferUltimo, costeAsientoS, votosSinEscS],
-                           sort=False)
+    if calculaUltimoElecto:
+        if len(cocientes) > VnumEscs:
+            primNoEleg = cocientes[VnumEscs]
+            difUltEsc = ((ultEleg[2] - primNoEleg[2]) * primNoEleg[1])
+        else:
+            primNoEleg = None
+            difUltEsc = None
+
+        if ultEleg is None:
+            ultimoSi = pd.Series({('ultElegido', 'Partido'): None, ('ultElegido', 'Posicion'): None})
+        else:
+            ultimoSi = pd.Series({('ultElegido', 'Partido'): ultEleg[0], ('ultElegido', 'Posicion'): ultEleg[1]})
+
+        if primNoEleg is None:
+            primeroNo = pd.Series({('primNoElegido', 'Partido'): None, ('primNoElegido', 'Posicion'): None})
+            diferUltimo = pd.Series({('difUltEleg', 'votos'): None})
+        else:
+            primeroNo = pd.Series(
+                {('primNoElegido', 'Partido'): primNoEleg[0], ('primNoElegido', 'Posicion'): primNoEleg[1]})
+            diferUltimo = np.ceil(pd.Series({('difUltEleg', 'votos'): difUltEsc}))
+
+        listaSeriesFinal.append(ultimoSi)
+        listaSeriesFinal.append(primeroNo)
+        listaSeriesFinal.append(diferUltimo)
+
+    if calculaVotosSinEsc:
+        votosSinEsc = {('votosSinAsiento', x): actVotos[x] if x not in dictElegidos else 0 for x in actVotos.index}
+        votosSinEscS = pd.Series(votosSinEsc)
+        listaSeriesFinal.append(votosSinEscS)
+
+    if calculaCortadosUmabral:
+        noPasaUmbral = Dvotos[~(Dvotos > (sumVotos * umbral))].sum()
+        votosUmbral = pd.Series({('votosUmbral', 'pasa'): umbVotos.sum(), ('votosUmbral', 'noPasa'): noPasaUmbral},
+                                dtype=np.uint64)
+        listaSeriesFinal.append(votosUmbral)
+
+    resultados = pd.concat(objs=listaSeriesFinal, sort=False)
 
     return resultados
