@@ -1,5 +1,5 @@
 
-from collections import Sequence
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -9,6 +9,7 @@ colsControl = dict(votCand='votCands', numPersElegidas='numEscs')
 colsIDProc = ['tipoElec', 'yearElec', 'mesElec', 'numVuelta']
 colsIDEnt = ['codAut', 'codProv', 'codMunic', 'numDistr', 'codSeccion', 'codMesa']
 columnsIdent = colsIDProc + colsIDEnt
+col2remove = ['codDP', 'codCom']
 
 
 def clavesParaIndexar(dataframe):
@@ -88,19 +89,18 @@ def uniformizaIndices(dfdatos, dfresultados):
         resultResultados.reorder_levels(order=finalOrder).sort_index()
 
 
-def aplanaResultados(reselect, columnaDato='votCand', ficherosATratar=None):
+def aplanaResultados(reselect, columnaDato='votCand'):
     """
-    A partir de un diccionario con todos los datos cargados del ZIP, devuelve un diccionario (*) con dataframes que
+    A partir de un diccionario con todos los datos cargados del ZIP, devuelve un diccionario con dataframes que
     tienen combinado el dataframe de información de "circunscripción" (sean mesa, municipio o "entidades superiores al
     municipio") con los resultados obtenidos por las candidaturas para dicha circunscripción (con las candidaturas
     empleando la sigla que corresponde a la agrupación nacional según uno de los ficheros incluidos en el ZIP, el 03).
+    El diccionario también descompone los DF "nativos" del resultado en las agrupaciones definidas en él. Ejemplo:
+    mesas incluye datos CERA
 
     :param reselect: diccionario de dataframes con los datos cargados del ZIP
     :param columnaDato: valor del fichero de resultados que poner como resultado de la candidatura: pueden ser 'votCand'
             o 'numPersElegidas'. OJO! 'datosMesasResult' no tiene la columna 'numPersElegidas'.
-    :param ficherosATratar: Uno de los siguientes: datosMunicResult, datosSupMunicResult, datosMesasResult
-                            Lista con alguna combinación de los anteriores
-                            None -> Todos los ficheros que esten contenidos en el ZIP
     :return: Si se pasa un unico fichero a tratar, el dataframe que corresponde a ese fichero; si hay más de uno, un
              diccionario con los dataframes indexados por la clave del fichero
     """
@@ -114,17 +114,8 @@ def aplanaResultados(reselect, columnaDato='votCand', ficherosATratar=None):
 
     infoCands = uniformizaCands(reselect['datosCandidatura'])
 
-    if ficherosATratar is None:
-        listaClaves = list(reselect.keys())
-    elif isinstance(ficherosATratar, str):
-        listaClaves = list()
-        listaClaves.append(ficherosATratar)
-    elif isinstance(ficherosATratar, Sequence):
-        listaClaves = ficherosATratar
-    else:
-        raise TypeError("aplanaResultados: valor de parametro ficherosATratar no aceptable")
-
-    for clave in listaClaves:
+    # Aplana los resultados a partir de los datos en el ZIP
+    for clave in reselect:
         if clave not in reselect:
             print("aplanaResultados: clave '%s' no conocida." % clave)
             continue
@@ -138,12 +129,15 @@ def aplanaResultados(reselect, columnaDato='votCand', ficherosATratar=None):
             continue
 
         dfDatos = reselect[claveSinResult]
-        dfDatosIndexed = dfDatos.set_index(clavesParaIndexar(dfDatos)).sort_index()
+        actRemoval = [x for x in col2remove if x in dfDatos.columns]
+
+        dfDatosIndexed = dfDatos.set_index(clavesParaIndexar(dfDatos)).drop(labels=actRemoval, axis=1).sort_index()
         if colsControl[columnaDato] not in dfDatosIndexed:
             print("aplanaResultados: columna de control '%s' no est� en dataframe de datos '%s'" %
                   (colsControl[columnaDato], claveSinResult))
             continue
-        dfDatosIndexed.columns = pd.MultiIndex.from_tuples([('datosTerr', x) for x in dfDatosIndexed.columns])
+        dfDatosIndexed.columns = pd.MultiIndex.from_tuples(
+            [(tipoClaveDatos(x, 'datosTerr'), x) for x in dfDatosIndexed.columns])
 
         # Añade la informaci�n de cand nacional a los resultados
         dfResults = reselect[clave].merge(infoCands)
@@ -168,11 +162,112 @@ def aplanaResultados(reselect, columnaDato='votCand', ficherosATratar=None):
             print("aplanaResultados: clave '%s' suma de votos de candidaturas en resultados no casa con DF de datos" %
                   clave)
 
-        result[clave] = pd.concat([dfDatosIndexed, resultPlanos], axis=1).reset_index(level=colsIDProc,
-                                                                                      col_level=1, col_fill="idProc")
+        result[clave] = recolocaTerrColumns(
+            pd.concat([dfDatosIndexed, resultPlanos], axis=1).reset_index(level=colsIDProc, col_level=1,
+                                                                          col_fill="idProc"))
 
-        if isinstance(ficherosATratar, str):
-            return result[clave]
+    # Separa los dataframes "planos" nativos en otros con las entidades que contienen
+    if 'datosSupMunicResult' in result:
+        clave = 'datosSupMunicResult'
+        auxDF = result[clave]
+
+        result['provResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[99], level='codProv')])
+        result['autResult'] = recolocaTerrColumns(
+            auxDF[auxDF.index.isin(values=[99], level='codProv') & ~ auxDF.index.isin(values=[99], level='codAut')])
+        result['totResult'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='codAut')])
+
+    if 'datosMunicResult' in result:
+        clave = 'datosMunicResult'
+        auxDF = result[clave]
+
+        result['municResult'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='numDistr')])
+        result['distrResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[99], level='numDistr')])
+
+    if 'datosMesasResult' in result:
+        clave = 'datosMesasResult'
+        auxDF = result[clave]
+
+        result['mesaResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[999], level='codMunic')])
+        result['totCERA'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='codAut')])
+        result['autCERA'] = recolocaTerrColumns(
+            auxDF[auxDF.index.isin(values=[999], level='codMunic') & auxDF.index.isin(values=[99], level='codProv')])
+        result['provCERA'] = recolocaTerrColumns(
+            auxDF[auxDF.index.isin(values=[999], level='codMunic') & ~auxDF.index.isin(values=[99], level='codProv')])
+
+    return result
+
+
+def tipoClaveDatos(k, defaultvalue):
+
+    iTerr = ['codAut', 'codProv', 'codDistr', 'codPJ', 'codMunic', 'numDistr', 'codSeccion', 'codMesa', 'nomAmbito',
+             'nomMunic']
+
+    result = 'idTerr' if k in iTerr else defaultvalue
+
+    return result
+
+
+def recolocaTerrColumns(df):
+    """
+    Dado un dataframe, reordena las columnas y reasigna, si es necesario las columnas de datosTerr a idTerr
+
+    :param df: dataframe a manipulas
+    :return: dataframe nuevo con las columnas recolocadas
+    """
+
+    iTerr = ['codAut', 'codProv', 'codDistr', 'codPJ', 'codMunic', 'numDistr', 'codSeccion', 'codMesa', 'nomAmbito',
+             'nomMunic']
+
+    groupKeys = defaultdict(list)
+    renamedColumns = [(('idTerr' if t[1] in iTerr else t[0]), t[1]) for t in df.columns.tolist()]
+
+    df.columns = pd.MultiIndex.from_tuples(renamedColumns)
+
+    for t in renamedColumns:
+        groupKeys[t[0]].append(t[1])
+
+    columnList = list()
+
+    for k in iTerr:
+        if k in groupKeys['idTerr']:
+            columnList.append(('idTerr', k))
+
+    for g in ['idProc', 'datosTerr', 'numPersElegidas', 'votCand']:
+        if g in groupKeys:
+            columnList = columnList + [(g, x) for x in groupKeys[g]]
+
+    return df[columnList]
+
+
+def getExtraInfo(reselect):
+    """
+    Extrae información adicional (nombres, datos partido judicial, distrito electoral...) de los resultados electorales
+    para devolver un diccionario con dataframes que puedan mergear con los resultados aplanados.
+
+    :param reselect: resultado de readFileZIP
+    :return: Diccionario con dataframes (NO INDEXADOS). Las claves son:
+            municData: datos de los municipios (partido judicial, distrito electoral, nombre)
+            municDistrData: nombre del distrito electoral para los casos en los que hay distrito reconocido
+            provData: nombre de la provincia
+            autData: nombre de la comunidad autónoma
+            totData: Total nacional
+    """
+    result = dict()
+
+    if 'datosMunic' in reselect:
+        dfwrk = reselect['datosMunic']
+        result['municData'] = dfwrk[dfwrk['numDistr'] == 99][['codProv', 'codMunic', 'codPJ', 'codDistr', 'nomMunic']]
+        result['municDistrData'] = dfwrk[dfwrk['numDistr'] != 99][
+            ['codProv', 'codMunic', 'numDistr', 'nomMunic']].rename({'nomMunic': 'nomDistr'}, axis=1)
+
+    if 'datosSupMunic' in reselect:
+        dfwrk = reselect['datosSupMunic']
+        result['provData'] = dfwrk[dfwrk['codProv'] != 99][['codProv', 'nomAmbito']].rename({'nomAmbito': 'nomProv'},
+                                                                                            axis=1)
+        result['autData'] = dfwrk[(dfwrk['codProv'] == 99) & (dfwrk['codAut'] != 99)][['codAut', 'nomAmbito']].rename(
+            {'nomAmbito': 'nomAut'}, axis=1)
+        result['totData'] = dfwrk[dfwrk['codAut'] == 99][['codAut', 'nomAmbito']].rename({'nomAmbito': 'nomTot'},
+                                                                                         axis=1)
 
     return result
 
