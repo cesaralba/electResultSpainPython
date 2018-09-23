@@ -81,3 +81,9 @@ for i in FILELIST:
     res=readFileZIP(i)
 
 ~~~
+
+Corregir los ficheros 0710 que fallan por formato random
+
+~~~
+cat  07101505.DAT | awk '{ if ($0 !~ /^\s+$/){ if ($0 ~ /\s+$/) { VAL2=$0; gsub(/\s+$/,"",VAL2);  printf("%s%s\n",LINEA,VAL2); LINEA="" } else { LINEA=$0}}}' > 07101505.DATb
+~~~
