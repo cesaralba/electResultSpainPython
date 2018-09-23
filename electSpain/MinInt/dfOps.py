@@ -206,6 +206,18 @@ def recolocaTerrColumns(df):
 
 
 def getExtraInfo(reselect):
+    """
+    Extrae información adicional (nombres, datos partido judicial, distrito electoral...) de los resultados electorales
+    para devolver un diccionario con dataframes que puedan mergear con los resultados aplanados.
+
+    :param reselect: resultado de readFileZIP
+    :return: Diccionario con dataframes (NO INDEXADOS). Las claves son:
+            municData: datos de los municipios (partido judicial, distrito electoral, nombre)
+            municDistrData: nombre del distrito electoral para los casos en los que hay distrito reconocido
+            provData: nombre de la provincia
+            autData: nombre de la comunidad autónoma
+            totData: Total nacional
+    """
     result = dict()
 
     if 'datosMunic' in reselect:
@@ -220,6 +232,8 @@ def getExtraInfo(reselect):
                                                                                             axis=1)
         result['autData'] = dfwrk[(dfwrk['codProv'] == 99) & (dfwrk['codAut'] != 99)][['codAut', 'nomAmbito']].rename(
             {'nomAmbito': 'nomAut'}, axis=1)
+        result['totData'] = dfwrk[dfwrk['codAut'] == 99][['codAut', 'nomAmbito']].rename({'nomAmbito': 'nomTot'},
+                                                                                         axis=1)
 
     return result
 
