@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from itertools import product
+from itertools import product, chain
 
 import geopandas as gpd
 import numpy as np
@@ -67,6 +67,15 @@ def creaNumCols(df, cols):
 
 
 def creaMatriz(df, clave=None, matricesMR=None):
+    """
+    A partir de un geodataframe devuelve un dataframe con la matriz de adyacencias entre sus filas
+    :param df: geodataframe (geopandas)
+    :param clave: columna del dataframe original que se va a usar como clave (filas y columnas del DF resultante)
+    :param matricesMR: diccionario de pares { columnaDF:matrizADJ } para reducir cálculos. Ej: 2 provincias no pueden
+                       ser adyacentes si sus respectivas CCAA no lo son
+    :return: dataframe con la matriz resultante
+     
+    """
     dimdf = len(df)
     matriz = np.zeros_like(np.arange(dimdf * dimdf).reshape((dimdf, dimdf)), dtype=bool)
 
@@ -110,4 +119,65 @@ def creaMatriz(df, clave=None, matricesMR=None):
     result = pd.DataFrame(matriz, index=targNames, columns=targNames)
 
     print(estads)
+    return result
+
+
+def creaMatrizJoblib(df, clave=None, matricesMR=None, JLconfig=None):
+
+    from joblib import Parallel, delayed
+    from scipy.sparse import coo_matrix, dok_matrix
+
+    if JLconfig is None:
+        JLconfig = {}
+    configParallel = {'verbose': 20}
+    # TODO: Control de calidad con los parámetros
+    configParallel['n_jobs'] = JLconfig.get('nproc',2)
+    configParallel['prefer'] = JLconfig.get('joblibmode','threads')
+
+    dimdf = len(df)
+    # matriz = np.zeros_like(np.arange(dimdf * dimdf).reshape((dimdf, dimdf)), dtype=bool)
+
+    idx = df.index.to_list()
+    ridx = list(range(dimdf))
+    # estads = {'simetria': 0, 'matriz': 0, 'inters': 0}
+
+    def checkAdjacency(ix,iy):
+        if iy < ix:
+            return None
+
+        x = idx[ix]
+        y = idx[iy]
+
+        d0 = df.loc[x]
+        d1 = df.loc[y]
+
+        if matricesMR:
+            flag = False
+            for k, matAux in matricesMR.items():
+                if not matAux.loc[d0[k], d1[k]]:
+                    flag = True
+                    break
+            if flag:
+                return None
+
+        g0 = d0.geometry
+        g1 = d1.geometry
+
+        if g0.intersects(g1):
+            return (ix,iy)
+
+    resultJL = Parallel(**configParallel)(delayed(checkAdjacency)(x,y) for x,y in product(ridx, ridx))
+
+    matriz = dok_matrix((dimdf,dimdf), dtype=bool)
+    for x in resultJL:
+        if x is None:
+            continue
+        print(x)
+        matriz[x[0],x[1]]=True
+        matriz[x[1],x[0]]=True
+
+    targNames = df[clave] if clave else df.index
+
+    result = pd.DataFrame(matriz.todense(), index=targNames, columns=targNames)
+
     return result
