@@ -87,3 +87,50 @@ Corregir los ficheros 0710 que fallan por formato random
 ~~~
 cat  07101505.DAT | awk '{ if ($0 !~ /^\s+$/){ if ($0 ~ /\s+$/) { VAL2=$0; gsub(/\s+$/,"",VAL2);  printf("%s%s\n",LINEA,VAL2); LINEA="" } else { LINEA=$0}}}' > 07101505.DATb
 ~~~
+
+# Secciones censales
+
+~~~
+In [26]: gdf.columns
+Out[26]:
+Index(['OBJECTID', 'CUSEC', 'CUMUN', 'CSEC', 'CDIS', 'CMUN', 'CPRO', 'CCA',
+       'CUDIS', 'OBS', 'CNUT0', 'CNUT1', 'CNUT2', 'CNUT3', 'CLAU2', 'NPRO',
+       'NCA', 'NMUN', 'Shape_Leng', 'Shape_area', 'Shape_len', 'geometry',
+       'count'],
+      dtype='object')
+
+~~~
+
+~~~
+import geopandas as gpd
+from seccCensales.matrAdyacencia import leeContornoSeccionesCensales, agrupaContornos, creaNumCols
+from itertools import product
+
+#Carga los contornos de 2011
+gdf = leeContornoSeccionesCensales("/home/calba/devel/elecResultSpain/seccCens/contornos/SECC_CPV_E_20111101_01_R_INE.dbf")
+
+
+
+
+gdf['count']=1 # Para contar secciones en el territorio
+
+%time ccas = creaNumCols(agrupaContornos(gdf, claveAgr=['CCA'],extraCols=['NCA']), cols=['CCA'])  # ~ 60s  
+%time provs = creaNumCols(agrupaContornos(gdf, claveAgr=['CPRO'],extraCols=['CCA', 'NCA', 'NPRO']), cols=['CCA','CPRO'])  # ~ 50s
+%time muns = creaNumCols(agrupaContornos(gdf, claveAgr=['CUMUN'],extraCols=['CCA', 'CPRO', 'CMUN','NCA', 'NPRO', 'NMUN']), cols=['CCA','CPRO', 'CMUN','CUMUN']) # ~ 22s   
+%time dis = creaNumCols(agrupaContornos(gdf, claveAgr=['CUDIS'],extraCols=['CCA', 'CPRO', 'CMUN','CDIS','CUMUN', 'NCA', 'NPRO', 'NMUN']), cols=['CCA','CPRO', 'CMUN','CDIS','CUMUN','CUDIS']) # ~15s
+%time secs = creaNumCols(gdf,cols=[ 'CCA', 'CPRO', 'CMUN','CDIS','CSEC', 'CUMUN','CUDIS', 'CUSEC'])  # < 1s
+
+%time mcca = creaMatriz(ccas,clave='nCCA')
+matricesAdj = { 'nCCA': mcca }
+%time mprovs = creaMatriz(provs,clave='nCPRO',matricesMR=matricesAdj)
+matricesAdj = { 'nCPRO': mprovs }
+
+for p in product(cca2.index, cca2.index):
+    d0 = cca2.loc[p[0]]
+    d1 = cca2.loc[p[1]]
+    g0 = d0.geometry
+    g1 = d1.geometry
+    print(p[0],p[1],d0['NCA'],d1['NCA'],g0.intersects(g1))
+
+
+~~~
