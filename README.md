@@ -103,8 +103,10 @@ Index(['OBJECTID', 'CUSEC', 'CUMUN', 'CSEC', 'CDIS', 'CMUN', 'CPRO', 'CCA',
 
 ~~~
 import geopandas as gpd
-from seccCensales.matrAdyacencia import leeContornoSeccionesCensales, agrupaContornos, creaNumCols
+from seccCensales.matrAdyacencia import leeContornoSeccionesCensales, agrupaContornos, creaNumCols, creaMatrizRec, preparaAgrupacionConts, secNIV, vecinos2DF, setDFLabels
 from itertools import product
+import numpy as np
+import pandas as pd
 
 #Carga los contornos de 2011
 gdf = leeContornoSeccionesCensales("/home/calba/devel/elecResultSpain/seccCens/contornos/SECC_CPV_E_20111101_01_R_INE.dbf")
@@ -131,6 +133,28 @@ for p in product(cca2.index, cca2.index):
     g0 = d0.geometry
     g1 = d1.geometry
     print(p[0],p[1],d0['NCA'],d1['NCA'],g0.intersects(g1))
+
+%time g1 = preparaAgrupacionConts(gdf) ~ 3 min
+%time g2 = creaMatrizRec(g1,['CCAA', 'PRO', 'MUN', 'DIS', 'SEC']) ~ 1h
+  
+for k in g1:
+    print(k,g1[k].keys())
+
+for k in g2:
+    print(k,len(g2[k]))
+
+
+for k in g1:
+    print(k,g1[k].keys())
+    if 'sup2k' in g1[k]:
+        print(k,'sup2k\n', g1[k]['sup2k'].apply(len).value_counts().sort_index())
+
+for k in g2:
+    print(k)
+        print(k, g2[k].apply(sum).value_counts().sort_index())
+
+matAUT = setDFLabels(g2['CCAA'], g1, 'CCAA', 'NCA'):
+matPRO = setDFLabels(g2['PRO'], g1, 'PRO', 'NPRO'):
 
 
 ~~~

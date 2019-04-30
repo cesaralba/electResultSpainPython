@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from collections.abc import Iterable
 from itertools import product
 
@@ -326,3 +327,45 @@ def setDFLabels(df, datos, clave, etiqueta):
     """
     return df.set_axis(datos[clave]['contAgr'][etiqueta], axis=1, inplace=False).set_axis(
         datos[clave]['contAgr'][etiqueta], axis=0, inplace=False)
+
+
+def procesaArgumentos():
+    parser = ArgumentParser()
+
+    parser.add('-i', dest='infile', type=str, required=True)
+    parser.add('-o', dest='outfile', type=str, required=True)
+
+    parser.add('-l', dest='categs', type=str, required=True)
+
+
+
+    args = parser.parse_args()
+
+    result = vars(args)
+
+
+
+    return result
+
+
+
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+
+if __name__ == "__main__":
+
+    args = procesaArgumentos()
+
+    gdf = leeContornoSeccionesCensales(args.infile)
+
+    contAgs = preparaAgrupacionConts(gdf)
+    matricesAdj = creaMatrizRec(contAgs,['CCAA', 'PRO', 'MUN', 'DIS', 'SEC'])
+
+    
+
+
+pass
+
+
