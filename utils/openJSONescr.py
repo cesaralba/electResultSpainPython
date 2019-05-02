@@ -86,6 +86,56 @@ def processNomenclator(fname):
     return result
 
 
+def processResultados(fname):
+    """
+    'amb': codigo de la región
+    'numact': versión del cambio
+    'mdhm': hora del cambio
+    'totales': act|ant: datos generales
+        'metota': '60038', Mesas totales
+        'mesesc': '6890', Mesas escrutadas
+        'pmesesc': '11,48%', Porcentaje de ...
+        'padron': '46722980', Padron (pob total)
+        'centota': '34816238', Censo (pob derecho a voto) (votantes + abs)
+        'cenes': '2381206', Censo escrutado
+        'pcenes': '6,84%', Porc de ...
+        'votant': '1746978', Votantes
+        'pvotant': '73,37%', Porc de...
+        'dpvotant': '+6,89%', Variación de porc de ...
+        'absten': '634228', Abstencion
+        'pabsten': '26,63%', Porc de Abst
+        'dpabsten': '-6,89%', Var de porc de ...
+        'votnul': '19062', Nulos
+        'pvotnul': '1,09%', Porc de ..
+        'dpvotnul': '+0,16%', Variación de porc...
+        'votbla': '14281', Blancos
+        'pvotbla': '0,83%', Porc de ...
+        'dpvotbla': '+0,09%', Var de porc ...
+        'votcan': '1713626', Votos a cands (votantes - blancos - nulos)
+        'pvotcan': '99,17%', Porc de ...
+        'dpvotcan': '-0,09%', Var de porc ...
+        'votval': '1727907', Votos validos (vot a cand + blabcos)
+        'pvotval': '98,91%', Porc de ...
+        'dpvotval': '-0,16%', Var de porc de...
+        'pexclus': '3,00%', Umbral de exclusion (para entrar a reparto una cand debe tener >= pexc * validos (EN CIRCUNSCRIPCION)
+        'carg': '350', (plazas a repartir)
+        'gancodpar': '0096', codigo part ganador
+    'ultimo': ultimo escaño asignado?
+    'otros': el mitico resto de partidos. No tengo claro donde se usa
+    'partotabla': lista de resultado de partidos
+        {'act'|'ant': { 'codpar': '0042', #Codigo de partido (en nomenclator)
+                        'vot': '5286', #Votos obtenidos en circ
+                        'dvot': '+5286', #Diferencia de...
+                        'pvot': '0,31%', #Porcentaje de votos
+                        'dpvot': '+0,31%', #Dif de porc de ...
+                        'carg': '0', #Escaños obtenidos
+                        'dcarg': '0'}, #Dif de ...
+
+    :param fname:
+    :return:
+    """
+    data = readJSONfile(fname)
+
 # def table_results_to_dict(tab):
 #     result = []
 #     rows = tab.findAll('tr')
