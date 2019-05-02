@@ -100,9 +100,10 @@ FILEAUT='/home/calba/devel/Elec2018/out/201904282110/CO04999999999.json'
 FILEPROV='/home/calba/devel/Elec2018/out/201904282110/CO04079999999.json'
 FILENOMENC='/home/calba/devel/Elec2018/out/nomenclator.json'
 
-nomenc= readJSONfile(FILENOMENC)
 resAll = readJSONfile(FILEALL)  
 resAut = readJSONfile(FILEAUT)  
 resProv = readJSONfile(FILEPROV)  
+
+nomenc=processNomenclator(FILENOMENC) 
 
 ~~~

@@ -1,9 +1,75 @@
 import argparse
 import json
 import os.path
+import re
+from datetime import datetime
+from babel.numbers import parse_decimal
+
+def ambito2campos(codambito):
+    REambito = r'(?P<codAut>\d{2})(?P<codProv>\d{2})(?P<codMun>\d{3})(?P<codDistr>\d{2})(?P<codSeccion>\d{2})?'
+
+    ambMatch = re.match(REambito, codambito)
+
+    result = ambMatch.groupdict()
+
+    return {k: int(result[k]) for k in result if result[k] is not None}
 
 
-# from csv import DictWriter
+def mdhm2timestamp(valmdhm, year=2019):
+    REmdhm = r'(?P<month>\d{2})(?P<day>\d{2})(?P<hour>\d{2})(?P<minute>\d{2})'
+
+    ambMDHM = re.match(REmdhm, valmdhm)
+
+    result = {k: int(v) for k, v in ambMDHM.groupdict().items()}
+    result['year'] = year
+
+    return datetime(**result)
+
+
+def porc2val(valor):
+    REnumero = r'(?P<valor>[+-]?\d+(,\d+)?)%'
+
+    valMatch = re.match(REnumero, valor)
+
+    result = valMatch.groupdict()
+
+    return parse_decimal(result['valor'], locale='de')
+
+
+def totales2dict(totales):
+    keyToexclude = ['gancodpar']
+
+    result = dict()
+
+    for k in totales:
+        if k in keyToexclude or k.startswith('d'):
+            continue
+
+        if k.startswith('p') and k != 'padron':
+            result[k] = porc2val(totales[k])
+            #    print("Porcentaje", k, totales[k])
+        else:
+            result[k] = int(totales[k])
+
+    return result
+
+
+def partido2dict(datopartido):
+    keyToexclude = ['codpar']
+
+    result = dict()
+
+    for k in datopartido:
+        if k in keyToexclude or k.startswith('d'):
+            continue
+
+        if k.startswith('p') and k != 'padron':
+            result[k] = porc2val(datopartido[k])
+            #    print("Porcentaje", k, totales[k])
+        else:
+            result[k] = int(datopartido[k])
+
+    return result
 
 
 def process_cli_arguments():
@@ -11,6 +77,7 @@ def process_cli_arguments():
     parser.add_argument('-d', '--base-dir', dest='basedir', action='store', help='location of test results',
                         required=True)
     parser.add_argument('-o', '--output-file', dest='destfile', help='output file name', required=False)
+    parser.add_argument('-y', '--year', dest='year', help='year of election', required=False, default=2019)
 
     args = vars(parser.parse_args())
 
@@ -79,6 +146,8 @@ def processNomenclator(fname):
     data = readJSONfile(fname)
 
     result['ambitos'] = {x['c']: x for x in data['ambitos']['co']}
+    for amb in result['ambitos']:
+        result['ambitos'][amb].update(ambito2campos(amb))
 
     for per in data['partidos']['co']:
         result['partidos'][per] = {p['codpar']: p for p in data['partidos']['co'][per]}
@@ -86,7 +155,7 @@ def processNomenclator(fname):
     return result
 
 
-def processResultados(fname):
+def processResultados(fname, year=2019):
     """
     'amb': codigo de la región
     'numact': versión del cambio
@@ -135,6 +204,24 @@ def processResultados(fname):
     :return:
     """
     data = readJSONfile(fname)
+    result = {'totales': {'ant': {}, 'act': {}}, 'partidos': {'ant': {}, 'act': {}}}
+
+    result['amb'] = data['amb']
+    result.update(ambito2campos(data['amb']))
+    result['datesample'] = mdhm2timestamp(data['mdhm'], year=year)
+
+    for k in data['totales']:
+        result['totales'][k] = totales2dict(data['totales'][k])
+
+    for part in data['partotabla']:
+        for per in part:
+            datopart = part[per]
+            if datopart['codpar'] == '0000':
+                continue
+            result['partidos'][per][datopart['codpar']] = partido2dict(datopart)
+
+    return result
+
 
 # def table_results_to_dict(tab):
 #     result = []
