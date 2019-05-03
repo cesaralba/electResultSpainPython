@@ -3,7 +3,9 @@ import json
 import os.path
 import re
 from datetime import datetime
+from collections import defaultdict
 from babel.numbers import parse_decimal
+
 
 def ambito2campos(codambito):
     REambito = r'(?P<codAut>\d{2})(?P<codProv>\d{2})(?P<codMun>\d{3})(?P<codDistr>\d{2})(?P<codSeccion>\d{2})?'
@@ -75,7 +77,7 @@ def partido2dict(datopartido):
 def process_cli_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--base-dir', dest='basedir', action='store', help='location of test results',
-                        required=True)
+                        required=True, default=".")
     parser.add_argument('-o', '--output-file', dest='destfile', help='output file name', required=False)
     parser.add_argument('-y', '--year', dest='year', help='year of election', required=False, default=2019)
 
@@ -207,6 +209,8 @@ def processResultados(fname, year=2019):
     result = {'totales': {'ant': {}, 'act': {}}, 'partidos': {'ant': {}, 'act': {}}}
 
     result['amb'] = data['amb']
+    result['numact'] = data['numact']
+
     result.update(ambito2campos(data['amb']))
     result['datesample'] = mdhm2timestamp(data['mdhm'], year=year)
 
@@ -219,6 +223,28 @@ def processResultados(fname, year=2019):
             if datopart['codpar'] == '0000':
                 continue
             result['partidos'][per][datopart['codpar']] = partido2dict(datopart)
+
+    return result
+
+
+def processResultsDir(dirbase):
+
+    result = defaultdict(dict)
+
+    for d in os.listdir(dirbase):
+        subdir = os.path.join(dirbase,d)
+        if not os.path.isdir(subdir):
+            continue
+
+        for fich in os.listdir(subdir):
+
+            if not fich.endswith('.json'):
+                continue
+            file2work = os.path.join(subdir, fich)
+
+            aux = processResultados(file2work)
+            aux['filename'] = file2work
+            result[aux['amb']][aux['datesample']] = aux
 
     return result
 
@@ -269,20 +295,19 @@ def processResultados(fname, year=2019):
 #
 #
 
-if __name__ == "__main__":
+def main():
 
-    results = dict()
+
     args = process_cli_arguments()
 
     if not os.path.isdir(args['basedir']):
         print("Provided argument -d '%s' is not a directory" % args['basedir'])
         exit(1)
 
-    results_dir = os.path.join(args['basedir'], 'results')
+    sourcedir = os.path.relpath(args['basedir'])
 
-    if not os.path.exists(results_dir) or not os.path.isdir(results_dir):
-        print("Provided argument -d '%s' does not contain a results directory '%s'" % (args['basedir'], results_dir))
-        exit(1)
+    allMerged=processResultsDir(sourcedir)
+
 
     if args['destfile']:
         outputfile = args['destfile']
@@ -302,6 +327,10 @@ if __name__ == "__main__":
 
         if procdir:
             results[d] = procdir
+
+
+if __name__ == "__main__":
+    main()
 
     final_data = prepare_data_for_csv(results, include_all_trans=args['includeAllTr'])
 
