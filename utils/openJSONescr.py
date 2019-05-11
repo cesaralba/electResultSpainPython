@@ -2,8 +2,11 @@ import argparse
 import json
 import os.path
 import re
+from collections import defaultdict, Counter
 from datetime import datetime
-from collections import defaultdict
+
+import numpy as np
+import pandas as pd
 from babel.numbers import parse_decimal
 
 
@@ -56,7 +59,7 @@ def totales2dict(totales):
     return result
 
 
-def partido2dict(datopartido):
+def partido2dict(datopartido, periodo, nomenclator=None):
     keyToexclude = ['codpar']
 
     result = dict()
@@ -71,6 +74,8 @@ def partido2dict(datopartido):
         else:
             result[k] = int(datopartido[k])
 
+    if nomenclator:
+        result['siglapar'] = nomenclator['partidos'][periodo][datopartido['codpar']]['siglas']
     return result
 
 
@@ -79,6 +84,8 @@ def process_cli_arguments():
     parser.add_argument('-d', '--base-dir', dest='basedir', action='store', help='location of test results',
                         required=True, default=".")
     parser.add_argument('-o', '--output-file', dest='destfile', help='output file name', required=False)
+    parser.add_argument('-n', '--nomenclator', dest='nomenclator', help='lista de entidades (partidos, lugares...)',
+                        required=False)
     parser.add_argument('-y', '--year', dest='year', help='year of election', required=False, default=2019)
 
     args = vars(parser.parse_args())
@@ -147,6 +154,7 @@ def processNomenclator(fname):
 
     data = readJSONfile(fname)
 
+    result['constantes'] = {int(k): v for k, v in data['constantes']['level'].items()}
     result['ambitos'] = {x['c']: x for x in data['ambitos']['co']}
     for amb in result['ambitos']:
         result['ambitos'][amb].update(ambito2campos(amb))
@@ -157,7 +165,7 @@ def processNomenclator(fname):
     return result
 
 
-def processResultados(fname, year=2019):
+def processResultados(fname, year=2019, nomenclator=None):
     """
     'amb': codigo de la región
     'numact': versión del cambio
@@ -188,7 +196,7 @@ def processResultados(fname, year=2019):
         'votval': '1727907', Votos validos (vot a cand + blabcos)
         'pvotval': '98,91%', Porc de ...
         'dpvotval': '-0,16%', Var de porc de...
-        'pexclus': '3,00%', Umbral de exclusion (para entrar a reparto una cand debe tener >= pexc * validos (EN CIRCUNSCRIPCION)
+        'pexclus': '3,00%', Umbral de exclusion (para entrar a reparto una cand debe tener >= pexc * validos (EN CIRC)
         'carg': '350', (plazas a repartir)
         'gancodpar': '0096', codigo part ganador
     'ultimo': ultimo escaño asignado?
@@ -205,34 +213,63 @@ def processResultados(fname, year=2019):
     :param fname:
     :return:
     """
+
+    auxTotales = {'ant': {}, 'act': {}}
+
     data = readJSONfile(fname)
-    result = {'totales': {'ant': {}, 'act': {}}, 'partidos': {'ant': {}, 'act': {}}}
+    result = {'partidos': {'ant': {}, 'act': {}}}
+    result['totales'] = {'ant': {}, 'act': {}}
+    result['idTerr'] = {'amb': data['amb']}
+    result['idTerr'].update(ambito2campos(data['amb']))
+    if nomenclator:
+        result['idTerr']['nombre'] = nomenclator['ambitos'][data['amb']]['n']
+        result['idTerr']['tipo'] = nomenclator['constantes'][nomenclator['ambitos'][data['amb']]['l']]
 
-    result['amb'] = data['amb']
-    result['numact'] = data['numact']
-
-    result.update(ambito2campos(data['amb']))
-    result['datesample'] = mdhm2timestamp(data['mdhm'], year=year)
+    result['metadata'] = {'numact': data['numact'], 'datesample': mdhm2timestamp(data['mdhm'], year=year),
+                          'filename': fname
+                          }
 
     for k in data['totales']:
-        result['totales'][k] = totales2dict(data['totales'][k])
+        auxTotales[k] = totales2dict(data['totales'][k])
+
+    keysInAct = ['metota', 'centota']
+    keysInBoth = []
+    for k in auxTotales['act']:
+        if k in auxTotales['ant']:
+            keysInBoth.append(k)
+        else:
+            keysInAct.append(k)
+
+    for k in keysInBoth:
+        for per in auxTotales:
+            result['totales'][per][k] = data['totales'][per][k]
+
+    result['escrutinio'] = {k: data['totales']['act'][k] for k in keysInAct}
 
     for part in data['partotabla']:
         for per in part:
             datopart = part[per]
             if datopart['codpar'] == '0000':
                 continue
-            result['partidos'][per][datopart['codpar']] = partido2dict(datopart)
+            resultPart = partido2dict(datopart, per, nomenclator)
+            if 'siglapar' in resultPart:
+                labelPart = resultPart['siglapar']
+                resultPart.pop('siglapar')
+            else:
+                labelPart = datopart['codpar']
+            for cat, v in resultPart.items():
+                if cat not in result['partidos'][per]:
+                    result['partidos'][per][cat] = dict()
+                result['partidos'][per][cat][labelPart] = v
 
     return result
 
 
-def processResultsDir(dirbase):
-
+def processResultsDir(dirbase, **kwargs):
     result = defaultdict(dict)
 
     for d in os.listdir(dirbase):
-        subdir = os.path.join(dirbase,d)
+        subdir = os.path.join(dirbase, d)
         if not os.path.isdir(subdir):
             continue
 
@@ -242,62 +279,80 @@ def processResultsDir(dirbase):
                 continue
             file2work = os.path.join(subdir, fich)
 
-            aux = processResultados(file2work)
-            aux['filename'] = file2work
-            result[aux['amb']][aux['datesample']] = aux
+            aux = processResultados(file2work, **kwargs)
+
+            result[aux['idTerr']['amb']][aux['metadata']['datesample']] = aux
 
     return result
 
 
-# def table_results_to_dict(tab):
-#     result = []
-#     rows = tab.findAll('tr')
-#
-#     header = [x.text for x in rows[0].findAll('th')]
-#     for row in rows[1:]:
-#         data = [x.text for x in row.findAll('td')]
-#         aux = dict(zip(header, data))
-#         result.append(aux)
-#
-#     return result
-#
-#
-# def process_test_dir(dirresults):
-#
-#     result = dict()
-#
-#     testresults_file = os.path.join(dirresults, 'results.html')
-#     json_files = {
-#         'config': os.path.join(dirresults, 'api_config.json'),
-#         'mmech': os.path.join(dirresults, 'consolidatedConf.json'),
-#         'toolium': os.path.join(dirresults, 'toolium_config.json'),
-#         'environment': os.path.join(dirresults, 'environment_config.json')
-#     }
-#
-#     if not os.path.isfile(testresults_file):
-#         print("Directory '%s' does not contain a results file '%s'" % (dirresults, 'results.html'))
-#         return None
-#
-#     result['timers'] = process_results_html(testresults_file)
-#
-#     for key, conffile in json_files.items():
-#
-#     return result
-#
-#
-# def infer_test_params_from_dir(dirname):
-#     # 10u_24h_1_1ps_results_2019.04.05_09.14.10_month
-#     PATTERN = r"^(?P<concurrent_users>\d+)u_(?P<hour_interval>\d+)h_(?P<whatever>.*)_results_(?P<date>\d{4}\.\d{2}\.\d{2}_\d{2}\.\d{2}\.\d{2})_(?P<day_interval>\w+)"
-#
-#     m = re.match(PATTERN, dirname)
-#
-#     return m.groupdict()
-#
-#
+def getDictKeys(dictList):
+    """
+    Construye una lista de tuplas con claves para acceder a los valores de un dict anidado.
+    :param dictList: LISTA (use .values() si es preciso) de diccionarios.
+    :return: lista ordenada de tuplas con las claves
+    """
+
+    def recursFindKeys(datadict, keysf, result):
+        for k in datadict:
+            newkeys = keysf.copy()
+            newkeys.append(k)
+
+            if isinstance(datadict[k], dict):
+                recursFindKeys(datadict[k], newkeys, result)
+            else:
+                result.append(newkeys)
+        return result
+
+    result = []
+    keysfound = []
+
+    for dictitem in dictList:
+        result = recursFindKeys(dictitem, keysfound, result)
+
+    return sorted(Counter(map(tuple, result)).keys())
+
+
+def colNames2String(df, sep='_'):
+    return [sep.join([field for field in col if field not in ('', np.nan)]) for col in df.columns.to_list()]
+
+
+def deepDict(dic, keys):
+    if dic is None:
+        return None
+    if len(keys) == 0:
+        return dic
+    if keys[0] not in dic and len(keys) >= 1:
+        return None
+        # dic[keys[0]] = None
+
+    return deepDict(dic.get(keys[0], None), keys[1:])
+
+
+def createDataframe(bigDict):
+    auxAll = {(i, j): bigDict[i][j].copy()
+              for i in bigDict.keys()
+              for j in bigDict[i].keys()}
+
+    # print([(i, j) for i in bigDict.keys() for j in bigDict[i].keys()])
+    # print(list(auxAll.keys()))
+    filAll = sorted(list(auxAll.keys()))
+    colNames = getDictKeys(auxAll.values())
+
+    data2PD = []
+
+    for k in filAll:
+        newRow = []
+        for col in colNames:
+            newVal = deepDict(auxAll[k], col)
+            newRow.append(newVal)
+        data2PD.append(newRow)
+
+    return pd.DataFrame(data=data2PD, index=pd.MultiIndex.from_tuples(filAll),
+                        columns=pd.MultiIndex.from_tuples(colNames), copy=True)
+
 
 def main():
-
-
     args = process_cli_arguments()
 
     if not os.path.isdir(args['basedir']):
@@ -306,43 +361,15 @@ def main():
 
     sourcedir = os.path.relpath(args['basedir'])
 
-    allMerged=processResultsDir(sourcedir)
+    if 'nomenclator' in args and args['nomenclator'] is not None:
+        if os.path.isfile(args['nomenclator']):
+            nomenclatorData = processNomenclator(args['nomenclator'])
+        else:
+            nomenclatorData = None
 
-
-    if args['destfile']:
-        outputfile = args['destfile']
-    else:
-        outputfile = os.path.join(results_dir, "combined_results.csv")
-
-    for d in os.listdir(results_dir):
-        dirtomatch = os.path.join(results_dir, d)
-
-        if not os.path.isdir(dirtomatch):
-            print("Ignoring %s" % dirtomatch)
-            continue
-
-        print("Accepting %s" % dirtomatch)
-
-        procdir = process_test_dir(dirtomatch)
-
-        if procdir:
-            results[d] = procdir
+    allMerged = processResultsDir(sourcedir, year=args['year'], nomenclator=nomenclatorData)
+    allDF = createDataframe(allMerged)
 
 
 if __name__ == "__main__":
     main()
-
-    final_data = prepare_data_for_csv(results, include_all_trans=args['includeAllTr'])
-
-    fieldorder = ['concurrent_users', 'hour_interval', 'day_interval', 'flat', 'label', 'measure', 'script_name',
-                  'test:api_server', 'api:release', 'api:backend_profile', 'api:backend_audiences', 'api:els:hosts',
-                  'api:els:index', 'test_start', 'duration', 'transactions', 'errors', u'count', u'avg', u'stdev',
-                  u'min', u'max', u'80pct', u'90pct', u'95pct']
-
-    with open(outputfile, 'w') as csvfile:
-        writer = DictWriter(csvfile, fieldnames=fieldorder)
-
-        writer.writeheader()
-        for r in final_data:
-            finalrow = {k: v for k, v in r.items() if k in fieldorder}
-            writer.writerow(finalrow)
