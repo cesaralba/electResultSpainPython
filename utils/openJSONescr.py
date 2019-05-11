@@ -352,6 +352,23 @@ def createDataframe(bigDict):
                         columns=pd.MultiIndex.from_tuples(colNames), copy=True)
 
 
+def df2Parquet(df, fname, sep='_'):
+    dfColRenamed = df.copy()
+    dfColRenamed.columns = pd.Index(colNames2String(df, sep=sep))
+
+    dfColRenamed.to_Parquet(fname)
+
+
+def parquet2DF(fname, sep='_'):
+    df = pd.read_parquet(fname)
+
+    newCols = [tuple(x.split(sep)) for x in list(df.columns.to_list())]
+
+    df.columns = pd.MultiIndex.from_tuples(newCols)
+
+    return df
+
+
 def main():
     args = process_cli_arguments()
 
