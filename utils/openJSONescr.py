@@ -348,7 +348,7 @@ def createDataframe(bigDict):
             newRow.append(newVal)
         data2PD.append(newRow)
 
-    return pd.DataFrame(data=data2PD, index=pd.MultiIndex.from_tuples(filAll),
+    return pd.DataFrame(data=data2PD, index=pd.MultiIndex.from_tuples(filAll,names=['amb','tstamp']),
                         columns=pd.MultiIndex.from_tuples(colNames), copy=True)
 
 
