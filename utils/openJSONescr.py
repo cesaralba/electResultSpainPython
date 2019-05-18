@@ -7,7 +7,7 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
-from babel.numbers import parse_decimal
+from babel.numbers import parse_decimal, decimal
 
 
 def ambito2campos(codambito):
@@ -242,9 +242,9 @@ def processResultados(fname, year=2019, nomenclator=None):
 
     for k in keysInBoth:
         for per in auxTotales:
-            result['totales'][per][k] = data['totales'][per][k]
+            result['totales'][per][k] = auxTotales[per][k]
 
-    result['escrutinio'] = {k: data['totales']['act'][k] for k in keysInAct}
+    result['escrutinio'] = {k: auxTotales['act'][k] for k in keysInAct}
 
     for part in data['partotabla']:
         for per in part:
@@ -329,6 +329,43 @@ def deepDict(dic, keys):
     return deepDict(dic.get(keys[0], None), keys[1:])
 
 
+def getColTypes(valList, keyList, typeConverter=None):
+    if typeConverter is None:
+        typeConverter = {str: np.object, int: pd.Int64Dtype(), decimal.Decimal: np.float64, datetime: np.datetime64}
+    aux = defaultdict(lambda: defaultdict(int))
+    result = dict()
+    for val in valList:
+        for k in keyList:
+            v = deepDict(val, k)
+            if v is None:
+                continue
+            aux[k][type(v)] += 1
+
+    for k in aux:
+        if len(aux[k]) != 1:
+            raise ValueError("%s tiene más de 1 tipo (%i)" % (k, len(aux[k])))
+
+        tipoConocido = list(aux[k].keys())[0]
+
+        result[k] = typeConverter[tipoConocido]
+
+    return result
+
+def padTupleList(myList, padItem=None):
+    """
+    Pads each tuple of the list by appending padItem to make all items to have same length
+    :param myList:
+    :param padItem:
+    :return:
+    """
+    aux = [(x,len(x)) for x in myList]
+    maxLen= max([x[1] for x in aux])
+    result = [tuple(list(t)+ [padItem]*(maxLen-l)) for t,l in aux]
+
+    return result
+
+
+
 def createDataframe(bigDict):
     auxAll = {(i, j): bigDict[i][j].copy()
               for i in bigDict.keys()
@@ -348,15 +385,37 @@ def createDataframe(bigDict):
             newRow.append(newVal)
         data2PD.append(newRow)
 
-    return pd.DataFrame(data=data2PD, index=pd.MultiIndex.from_tuples(filAll,names=['amb','tstamp']),
+    colTypes = getColTypes(auxAll.values(),colNames)
+    auxColTypes= [colTypes[x] for x in colNames]
+
+
+    auxResult= pd.DataFrame(data=data2PD, index=pd.MultiIndex.from_tuples(filAll, names=['amb', 'tstamp']),
                         columns=pd.MultiIndex.from_tuples(colNames), copy=True)
+    result= auxResult.astype(dict(zip(pd.MultiIndex.from_tuples(padTupleList(colNames,np.nan)),auxColTypes)),copy=True)
+
+    return result
+
 
 
 def df2Parquet(df, fname, sep='_'):
+    cols2retype= dict()
     dfColRenamed = df.copy()
     dfColRenamed.columns = pd.Index(colNames2String(df, sep=sep))
 
-    dfColRenamed.to_Parquet(fname)
+    for c in dfColRenamed.columns:
+        if not isinstance(dfColRenamed[c].dtype,pd.core.arrays.integer.Int64Dtype):
+            continue
+        if sum(dfColRenamed[c].isna()) > 0:
+            cols2retype[c] = np.float64
+        else:
+            cols2retype[c] = np.int64
+
+    if cols2retype:
+        dfColRetyped=dfColRenamed.astype(cols2retype,copy=True)
+    else:
+        dfColRetyped=dfColRenamed
+
+    dfColRetyped.to_parquet(fname)
 
 
 def parquet2DF(fname, sep='_'):

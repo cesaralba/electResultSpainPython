@@ -100,6 +100,7 @@ FILEALL='/home/calba/devel/Elec2018/out/201904282110/CO99999999999.json'
 FILEAUT='/home/calba/devel/Elec2018/out/201904282110/CO04999999999.json'
 FILEPROV='/home/calba/devel/Elec2018/out/201904282110/CO04079999999.json'
 FILENOMENC='/home/calba/devel/Elec2018/out/nomenclator.json'
+OUTFILE='/tmp/escGen201904.parquet'
 
 resAll = readJSONfile(FILEALL)  
 resAut = readJSONfile(FILEAUT)  
