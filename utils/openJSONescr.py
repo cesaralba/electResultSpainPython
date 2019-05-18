@@ -427,6 +427,10 @@ def parquet2DF(fname, sep='_'):
     return df
 
 
+def ultEntrada(df):
+    return df.groupby('amb').tail(n=1)
+
+
 def main():
     args = process_cli_arguments()
 
