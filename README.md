@@ -82,13 +82,13 @@ for i in FILELIST:
 
 ~~~
 
-Corregir los ficheros 0710 que fallan por formato random
+# Corregir los ficheros 0710 que fallan por formato random
 
 ~~~
 cat  07101505.DAT | awk '{ if ($0 !~ /^\s+$/){ if ($0 ~ /\s+$/) { VAL2=$0; gsub(/\s+$/,"",VAL2);  printf("%s%s\n",LINEA,VAL2); LINEA="" } else { LINEA=$0}}}' > 07101505.DATb
 ~~~
 
-ESCRUTINIO
+# Procesado ESCRUTINIO
 
 ~~~
 from utils.openJSONescr import *
@@ -114,3 +114,48 @@ allDF = createDataframe(allMerged)
 ultEscr= allDF.groupby('amb').tail(n=1) 
 
 ~~~
+
+# Analisis ESCRUTINIO 2019
+
+~~~
+
+FILEESCR='/home/calba/devel/Elec2018/out/escrutiniogen201904.parquet'      
+from utils.openJSONescr import ultEntrada, parquet2DF
+from utils.DHondt import DHondt
+
+
+df2019 = parquet2DF(FILEESCR)
+df2019final = ultEntrada(df2019)
+
+df2019aux = pd.concat([df2019final.idTerr.droplevel(2,axis=1).droplevel(1,axis=1),
+                       df2019final.totales.act[['carg','votbla']].droplevel(1,axis=1),
+                       df2019final.escrutinio[['pexclus']].droplevel(2,axis=1).droplevel(1,axis=1)/100,   
+                      ],axis=1)
+
+df2019terr = pd.concat([df2019aux],axis=1,keys=['datosTerr'])
+df2019vots = pd.concat([df2019final.partidos.act.vot],axis=1,keys=['votCand'])
+df2019escs = pd.concat([df2019final.partidos.act.carg],axis=1,keys=['escsCand'])
+
+
+df2019votsC=df2019terr.join(df2019vots).loc[df2019final.idTerr.tipo.iloc[:,0]== 'CIRCUNSCRIPCIÓN ELECTORAL']
+df2019escsC=df2019terr.join(df2019escs).loc[df2019final.idTerr.tipo.iloc[:,0]== 'CIRCUNSCRIPCIÓN ELECTORAL']
+df2019votsA=df2019terr.join(df2019vots).loc[df2019final.idTerr.tipo.iloc[:,0]== 'COMUNIDAD']
+df2019escsA=df2019terr.join(df2019escs).loc[df2019final.idTerr.tipo.iloc[:,0]== 'COMUNIDAD']
+df2019votsE=df2019terr.join(df2019vots).loc[df2019final.idTerr.tipo.iloc[:,0]== 'ESPAÑA']
+df2019escsE=df2019terr.join(df2019escs).loc[df2019final.idTerr.tipo.iloc[:,0]== 'ESPAÑA']
+
+
+
+pAct = df2019circs.partidos.act
+
+df2019terr = pd.concat([df2019circs.idTerr.copy().droplevel(2,axis=1).droplevel(1,axis=1)],keys=['idTerr'],names
+df2019Info=df2019circs[[('totales', 'act', 'carg', np.nan),('totales', 'act', 'votbla', np.nan),('escrutinio', 'pexclus', np.nan, np.nan)]].copy()
+df2019Info.columns=pd.Index(['numEscs','votbla','pexclus'])
+
+df2019vot =  df2019circs.partidos.act.vot.copy()
+df2019vot.columns = df2019vot.columns
+df2019carg =  df2019circs.partidos.act.carg.copy()
+df2019carg.columns = df2019carg.columns
+~~~
+         
+         

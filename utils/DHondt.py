@@ -21,6 +21,7 @@ def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('
             print("DHondt: clave '%s' para numero de escaños no está en fila." % numescs)
             return None
 
+
         if isinstance(votBlanco, (int, np.uint32, np.uint64)):
             VvotBlanco = votBlanco
         elif votBlanco in fila.index:
@@ -28,12 +29,21 @@ def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('
         else:
             print("DHondt: clave '%s' para numero de votos en blanco no está en fila." % votBlanco)
             return None
+
+        if isinstance(umbral, (float, np.float32, np.float64)):
+            Vumbral = umbral
+        elif votBlanco in fila.index:
+            Vumbral = fila[umbral]
+        else:
+            print("DHondt: clave '%s' para umbral no está en fila." % umbral)
+            return None
+
     else:
         raise TypeError("Esperaba una Serie (fila procedente del Dataframe")
 
     actVotos = Dvotos[~Dvotos.isna()].astype(np.uint64)
     sumVotos = sum(actVotos) + VvotBlanco
-    umbVotos = Dvotos[Dvotos > (sumVotos * umbral)]
+    umbVotos = Dvotos[Dvotos > (sumVotos * Vumbral)]
 
     listaSeriesFinal = list()
 
@@ -92,7 +102,7 @@ def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('
         listaSeriesFinal.append(votosSinEscS)
 
     if calculaCortadosUmabral:
-        noPasaUmbral = Dvotos[~(Dvotos > (sumVotos * umbral))].sum()
+        noPasaUmbral = Dvotos[~(Dvotos > (sumVotos * Vumbral))].sum()
         votosUmbral = pd.Series({('votosUmbral', 'pasa'): umbVotos.sum(), ('votosUmbral', 'noPasa'): noPasaUmbral},
                                 dtype=np.uint64)
         listaSeriesFinal.append(votosUmbral)

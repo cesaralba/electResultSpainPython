@@ -1,3 +1,5 @@
+jupyter
+
 babel
 geopandas
 matplotlib
