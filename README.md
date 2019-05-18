@@ -111,4 +111,6 @@ allMerged=processResultsDir(DIRBASE, nomenclator=nomenc, year=2019)
 
 allDF = createDataframe(allMerged)
 
+ultEscr= allDF.groupby('amb').tail(n=1) 
+
 ~~~

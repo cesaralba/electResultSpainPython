@@ -83,7 +83,7 @@ def process_cli_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--base-dir', dest='basedir', action='store', help='location of test results',
                         required=True, default=".")
-    parser.add_argument('-o', '--output-file', dest='destfile', help='output file name', required=False)
+    parser.add_argument('-o', '--output-file', dest='destfile', help='output file name', required=True)
     parser.add_argument('-n', '--nomenclator', dest='nomenclator', help='lista de entidades (partidos, lugares...)',
                         required=False)
     parser.add_argument('-y', '--year', dest='year', help='year of election', required=False, default=2019)
@@ -351,6 +351,7 @@ def getColTypes(valList, keyList, typeConverter=None):
 
     return result
 
+
 def padTupleList(myList, padItem=None):
     """
     Pads each tuple of the list by appending padItem to make all items to have same length
@@ -358,12 +359,11 @@ def padTupleList(myList, padItem=None):
     :param padItem:
     :return:
     """
-    aux = [(x,len(x)) for x in myList]
-    maxLen= max([x[1] for x in aux])
-    result = [tuple(list(t)+ [padItem]*(maxLen-l)) for t,l in aux]
+    aux = [(x, len(x)) for x in myList]
+    maxLen = max([x[1] for x in aux])
+    result = [tuple(list(t) + [padItem] * (maxLen - l)) for t, l in aux]
 
     return result
-
 
 
 def createDataframe(bigDict):
@@ -385,25 +385,24 @@ def createDataframe(bigDict):
             newRow.append(newVal)
         data2PD.append(newRow)
 
-    colTypes = getColTypes(auxAll.values(),colNames)
-    auxColTypes= [colTypes[x] for x in colNames]
+    colTypes = getColTypes(auxAll.values(), colNames)
+    auxColTypes = [colTypes[x] for x in colNames]
 
-
-    auxResult= pd.DataFrame(data=data2PD, index=pd.MultiIndex.from_tuples(filAll, names=['amb', 'tstamp']),
-                        columns=pd.MultiIndex.from_tuples(colNames), copy=True)
-    result= auxResult.astype(dict(zip(pd.MultiIndex.from_tuples(padTupleList(colNames,np.nan)),auxColTypes)),copy=True)
+    auxResult = pd.DataFrame(data=data2PD, index=pd.MultiIndex.from_tuples(filAll, names=['amb', 'tstamp']),
+                             columns=pd.MultiIndex.from_tuples(colNames), copy=True)
+    result = auxResult.astype(dict(zip(pd.MultiIndex.from_tuples(padTupleList(colNames, np.nan)), auxColTypes)),
+                              copy=True)
 
     return result
 
 
-
 def df2Parquet(df, fname, sep='_'):
-    cols2retype= dict()
+    cols2retype = dict()
     dfColRenamed = df.copy()
     dfColRenamed.columns = pd.Index(colNames2String(df, sep=sep))
 
     for c in dfColRenamed.columns:
-        if not isinstance(dfColRenamed[c].dtype,pd.core.arrays.integer.Int64Dtype):
+        if not isinstance(dfColRenamed[c].dtype, pd.core.arrays.integer.Int64Dtype):
             continue
         if sum(dfColRenamed[c].isna()) > 0:
             cols2retype[c] = np.float64
@@ -411,9 +410,9 @@ def df2Parquet(df, fname, sep='_'):
             cols2retype[c] = np.int64
 
     if cols2retype:
-        dfColRetyped=dfColRenamed.astype(cols2retype,copy=True)
+        dfColRetyped = dfColRenamed.astype(cols2retype, copy=True)
     else:
-        dfColRetyped=dfColRenamed
+        dfColRetyped = dfColRenamed
 
     dfColRetyped.to_parquet(fname)
 
@@ -445,6 +444,8 @@ def main():
 
     allMerged = processResultsDir(sourcedir, year=args['year'], nomenclator=nomenclatorData)
     allDF = createDataframe(allMerged)
+
+    df2Parquet(allDF, args['destfile'])
 
 
 if __name__ == "__main__":
