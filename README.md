@@ -87,3 +87,30 @@ Corregir los ficheros 0710 que fallan por formato random
 ~~~
 cat  07101505.DAT | awk '{ if ($0 !~ /^\s+$/){ if ($0 ~ /\s+$/) { VAL2=$0; gsub(/\s+$/,"",VAL2);  printf("%s%s\n",LINEA,VAL2); LINEA="" } else { LINEA=$0}}}' > 07101505.DATb
 ~~~
+
+ESCRUTINIO
+
+~~~
+from utils.openJSONescr import *
+from collections import Counter, defaultdict
+from itertools import chain
+
+DIRBASE='/home/calba/devel/Elec2018/out'
+FILEALL='/home/calba/devel/Elec2018/out/201904282110/CO99999999999.json'
+FILEAUT='/home/calba/devel/Elec2018/out/201904282110/CO04999999999.json'
+FILEPROV='/home/calba/devel/Elec2018/out/201904282110/CO04079999999.json'
+FILENOMENC='/home/calba/devel/Elec2018/out/nomenclator.json'
+OUTFILE='/tmp/escGen201904.parquet'
+
+resAll = readJSONfile(FILEALL)  
+resAut = readJSONfile(FILEAUT)  
+resProv = readJSONfile(FILEPROV)  
+
+nomenc=processNomenclator(FILENOMENC) 
+allMerged=processResultsDir(DIRBASE, nomenclator=nomenc, year=2019)
+
+allDF = createDataframe(allMerged)
+
+ultEscr= allDF.groupby('amb').tail(n=1) 
+
+~~~
