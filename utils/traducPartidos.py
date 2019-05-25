@@ -40,13 +40,9 @@ class traducPartidos(object):
             result += " dir: no trads"
 
         if self.inv:
-            result += (" inv: " + ", ".join(["  '%s' <- '%s'" % (k, ", ".join(sorted(v))) for k, v in self.inv.items()])
+            result += (" inv: " + ", ".join(["  '%s' <- [%s]" % (k, ", ".join(sorted(v))) for k, v in self.inv.items()])
                        )
         else:
             result += " inv: no trads"
 
         return result
-
-    # __repr__ = __str
-    # def __repr__(self):
-    #     return self. __str__()

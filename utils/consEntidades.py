@@ -1,21 +1,55 @@
-from collections import defaultdict
-
 import numpy as np
 
-dirTrans = {'ant': dict(), 'act': dict()}
-dirInv = {'ant': defaultdict(list), 'act': defaultdict(list)}
+from utils.deepdict import serie2deepdict, index2deepdict
+from .agrupacTraducciones import asignaTradsKS
+from .traducPartidos import traducPartidos
 
 
-def procesaGrCircs(df, claveDisc=None):
-    if len(df) <= 2:
-        return None
+def aplicaTraducciones(serie, trads):
+    """
+    Dado una serie (de PERIODO) con indice (['vot','carg'],[sigla de partido])
+    :param df: DF (de PERIODO) con clave (['vot','carg'],[sigla de partido]). SIN el ['ant','act']
+    :param trads: traducciones conocidas. Diccionario con
+    :return:
+    """
 
+    result = serie.copy()
+
+    dictSerie = serie2deepdict(serie)
+
+    for cat in dictSerie:
+        for porig in trads.listaPartidos():
+            if porig in dictSerie[cat]:
+                pdest = trads.traduce(porig)
+                if pdest not in dictSerie[cat]:
+                    raise ValueError("aplicaTraducciones: '%s' no está en '%s'" % (pdest, cat))
+                print(porig, "->", pdest)
+
+                result[cat][pdest] += result[cat][porig]
+                result[cat][porig] -= result[cat][porig]
+
+    return result
+
+
+def procesaGrCircs(df, claveDisc=None, trads=None):
+    print(df)
+    if trads is None:
+        trads = {per: traducPartidos() for per in index2deepdict(df.partidos.columns)}
+
+    if len(df) < 2:
+        return trads
+
+    print(df[df[claveDisc] == 99][('idTerr', 'nombre', np.nan, np.nan)])
+
+    # p* son porcentaje
     targKeys = [x for x in df.partidos.columns.to_list() if not x[1].startswith('p')]
-    dfAux = df.partidos[targKeys]
+
+    dfAux = df.partidos[targKeys].copy()
 
     # print(dfAux)
     # print(dfAux[df[claveDisc] != 99])
 
+    # El codigo 99 (o 999) es la agregación
     filAgr = dfAux[df[claveDisc] == 99].sum(axis=0)
     filInd = dfAux[df[claveDisc] != 99].sum(axis=0)
     difFil = filAgr - filInd
@@ -23,18 +57,37 @@ def procesaGrCircs(df, claveDisc=None):
     actDifs = difFil[difFil != 0]
 
     if (len(actDifs) == 0):
-        return
-    # print("A",filAgr)
-    # print("I",filInd)
-    # print("D",difFil)
-    print(df[df[claveDisc] == 99][('idTerr', 'nombre', np.nan, np.nan)])
-    # print("D+",actDifs)
-    difPos = difFil[difFil > 0]
-    difNeg = difFil[difFil < 0]
-    print(len(difPos), len(difNeg))
-    print(difPos)
-    print(difNeg)
+        return trads
 
-# procesaGrCircs(df2019final[df2019final.idTerr.codProv.iloc[:,0]==99], claveDisc=('idTerr','codAut',np.nan,np.nan))
+    dictDif = serie2deepdict(actDifs)
 
-# df2019final.groupby(df2019final.idTerr.codAut.iloc[:,0]).apply(procesaGrCircs,claveDisc=('idTerr','codProv',np.nan,np.nan))
+    for per in dictDif:
+        difPer = actDifs[per]
+        print(difPer)
+        trasTrad = aplicaTraducciones(difPer, trads[per])
+        realDifs = trasTrad[trasTrad != 0]
+
+        if len(realDifs) == 0:
+            continue
+
+        realPos = realDifs[realDifs > 0]
+        realNeg = realDifs[realDifs < 0]
+
+        for cat in ['vot']:
+            if cat not in realPos:
+                continue
+
+            realPosCat = realPos[cat]
+            realNegCat = realNeg[cat]
+
+            tentTrad = asignaTradsKS(realPosCat, -realNegCat, trads[per])
+            print(tentTrad)
+
+            aux = aplicaTraducciones(actDifs[per].copy(),tentTrad)
+            if len(aux[aux !=0]) != 0:
+                raise Exception("Problem")
+            else:
+                trads[per]=tentTrad
+
+    return trads
+
