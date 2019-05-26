@@ -4,9 +4,20 @@ from .deepdict import serie2deepdict
 from .traducPartidos import traducPartidos
 
 
-class agrupaTraducciones(object):
+class agrupaTraduccionesFB(object):
+    """
+    Asigna las equivalencias de partidos por fuerza bruta. Problema habitual con este enfoque: escala mal.
+    Pero me ha servido para hacer un generador de iterador.
 
+    """
     def __init__(self, agrupadores, aagrupar, tradConoc=None):
+        """
+        Inicializa el objeto para buscar combinaciones válidas
+
+        :param agrupadores:  nombres de los partidos en los que se van a asignar
+        :param aagrupar: nombres de los partidos que se van a asignar
+        :param tradConoc: traducciones ya conocidas para añadir el resultado
+        """
         if len(agrupadores) == 0:
             raise ValueError("AgrupaTraducciones: no se han indicado agrupadores")
         if len(agrupadores) > len(aagrupar):
@@ -27,7 +38,13 @@ class agrupaTraducciones(object):
         self.estado = 0
 
     def combinador(self):
-        print("en combinador")
+        """
+        Devuelve una traducción valida (todos los partidos asignados y ni un agregador sin partido).
+        OJO: es una traducción válida que luego hay que ver si las sumas dan.
+
+        Iterador
+        :return:
+        """
 
         while self.estado < (self.numcont) ** (self.lenClases + 1):
             flag = True
@@ -63,12 +80,21 @@ class agrupaTraducciones(object):
 
 def asignaTradsKS(contenedores, clases, knownTrad=None):
     """
+    Asigna traducciones analizando el problema como sucesivos Knapsacks (uno por cada traducción destino)
 
-    :param contenedores:
-    :param clases:
-    :return:
+    OJO: Asume que todos los partidos asignables van a ir a un contenedor, que todos los contenedores van a tener al
+    menos un partido y que las sumas son exactas: votos de contenedor = suma(votos partidos asignables)
+
+    OJO2: Aunque se pueda hacer con "carg" (escaños) no tiene demasiado sentido ya que puede haber más de un asignable
+    con los mismos escaños (1 ó 2, p.ej.). Lo razonable es usar "vot" que es menos probable que las sumas den
+
+    :param contenedores: serie con los partidos en los que se van a asignar con numero de "cosas" (votos)
+    :param clases: serie con los partidos que se tienen que distribuir en los contenedores. Los valores deben ser
+                   POSITIVOS
+    :param knownTrad: traducciones conocidas. Las descubiertas se añadirán. OJO: debe ser un objeto traducPartidos.
+
+    :return: traducciones nuevas.
     """
-
     def findPosItems(cap, itemlist):
         return sorted([(k, v) for k, v in itemlist if v <= cap], key=lambda kv: kv[1], reverse=True)
 
