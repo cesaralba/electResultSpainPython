@@ -1,8 +1,7 @@
 import numpy as np
 
 from utils.deepdict import serie2deepdict, index2deepdict
-from .agrupacTraducciones import asignaTradsKS
-from .traducPartidos import traducPartidos
+from .traducPartidos import traducPartidos, asignaTradsKS
 
 
 def aplicaTraducciones(serie, trads):
