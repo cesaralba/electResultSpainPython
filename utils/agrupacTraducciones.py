@@ -102,9 +102,6 @@ def asignaTradsKS(contenedores, clases, knownTrad=None):
         elemList = [(k, v) for k, v in dicClass if k not in list(result.listaPartidos())]
 
         resKS = ks(v, [], elemList)
-        print(kagg, resKS)
         result.nuevaTrad([k for k, v in resKS], kagg)
-
-    print("asignaTradsKS:", result)
 
     return result

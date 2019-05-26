@@ -1,6 +1,7 @@
-import pandas as pd
-import numpy as np
 from collections import Counter
+
+import numpy as np
+import pandas as pd
 
 
 def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('datosTerr', 'votBlanco'), umbral=0.0,
@@ -20,7 +21,6 @@ def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('
         else:
             print("DHondt: clave '%s' para numero de escaños no está en fila." % numescs)
             return None
-
 
         if isinstance(votBlanco, (int, np.uint32, np.uint64)):
             VvotBlanco = votBlanco

@@ -162,11 +162,11 @@ subCol=[x for x in df2019.columns.to_list() if (x[0] == 'idTerr' or (x[0] == 'pa
 dfAct = df2019final[subCol]
 
 trad=None
-for g in dfAct.groupby(dfAct.idTerr.codAut.iloc[:,0]):
+for g in df2019final.groupby(df2019final.idTerr.codAut.iloc[:,0]):
     trad=procesaGrCircs(g[1],claveDisc=('idTerr','codProv',np.nan,np.nan),trads=trad)
-trad=procesaGrCircs(dfAct[dfAct.idTerr.codProv.iloc[:,0]==99], claveDisc=('idTerr','codAut',np.nan,np.nan),trads=trad)
+trad=procesaGrCircs(df2019final[df2019final.idTerr.codProv.iloc[:,0]==99], claveDisc=('idTerr','codAut',np.nan,np.nan),trads=trad)
 
-dfAct.groupby(dfAct.idTerr.codAut.iloc[:,0]).apply(procesaGrCircs,claveDisc=('idTerr','codProv',np.nan,np.nan))
+#df2019final.groupby(df2019final.idTerr.codAut.iloc[:,0]).apply(procesaGrCircs,claveDisc=('idTerr','codProv',np.nan,np.nan))
 ~~~
          
          

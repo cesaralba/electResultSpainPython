@@ -23,7 +23,6 @@ def aplicaTraducciones(serie, trads):
                 pdest = trads.traduce(porig)
                 if pdest not in dictSerie[cat]:
                     raise ValueError("aplicaTraducciones: '%s' no está en '%s'" % (pdest, cat))
-                print(porig, "->", pdest)
 
                 result[cat][pdest] += result[cat][porig]
                 result[cat][porig] -= result[cat][porig]
@@ -32,7 +31,6 @@ def aplicaTraducciones(serie, trads):
 
 
 def procesaGrCircs(df, claveDisc=None, trads=None):
-    print(df)
     if trads is None:
         trads = {per: traducPartidos() for per in index2deepdict(df.partidos.columns)}
 
@@ -63,7 +61,6 @@ def procesaGrCircs(df, claveDisc=None, trads=None):
 
     for per in dictDif:
         difPer = actDifs[per]
-        print(difPer)
         trasTrad = aplicaTraducciones(difPer, trads[per])
         realDifs = trasTrad[trasTrad != 0]
 
@@ -81,13 +78,11 @@ def procesaGrCircs(df, claveDisc=None, trads=None):
             realNegCat = realNeg[cat]
 
             tentTrad = asignaTradsKS(realPosCat, -realNegCat, trads[per])
-            print(tentTrad)
 
-            aux = aplicaTraducciones(actDifs[per].copy(),tentTrad)
-            if len(aux[aux !=0]) != 0:
+            aux = aplicaTraducciones(actDifs[per].copy(), tentTrad)
+            if len(aux[aux != 0]) != 0:
                 raise Exception("Problem")
             else:
-                trads[per]=tentTrad
+                trads[per] = tentTrad
 
     return trads
-
