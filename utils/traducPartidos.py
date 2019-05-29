@@ -50,6 +50,14 @@ class traducPartidos(object):
 
         return result
 
+    def eliminaTraduccionesIntermedias(self):
+        keysTo = set(self.inv.keys())
+        keysFrom = set(self.dir.keys())
+
+        for k in keysTo.intersection(keysFrom):
+            self.nuevaTrad(self.inv[k], self.dir[k])
+            self.inv.pop(k)
+
 
 class agrupaTraduccionesFB(object):
     """

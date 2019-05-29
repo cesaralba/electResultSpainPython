@@ -163,6 +163,10 @@ dfAct = df2019final[subCol]
 
 trad=None
 for g in df2019final.groupby(df2019final.idTerr.codAut.iloc[:,0]):
+    df=g[1]
+    print(df)
+    print(df[df[('idTerr','codProv',np.nan,np.nan)] == 99][('idTerr', 'tipo', np.nan, np.nan),('idTerr', 'nombre', np.nan, np.nan)])
+
     trad=procesaGrCircs(g[1],claveDisc=('idTerr','codProv',np.nan,np.nan),trads=trad)
 trad=procesaGrCircs(df2019final[df2019final.idTerr.codProv.iloc[:,0]==99], claveDisc=('idTerr','codAut',np.nan,np.nan),trads=trad)
 

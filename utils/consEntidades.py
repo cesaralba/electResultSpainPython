@@ -36,8 +36,6 @@ def procesaGrCircs(df, claveDisc=None, trads=None):
     if len(df) < 2:
         return trads
 
-    print(df[df[claveDisc] == 99][('idTerr', 'nombre', np.nan, np.nan)])
-
     # p* son porcentaje
     targKeys = [x for x in df.partidos.columns.to_list() if not x[1].startswith('p')]
 
@@ -83,5 +81,8 @@ def procesaGrCircs(df, claveDisc=None, trads=None):
                 raise Exception("Problem")
             else:
                 trads[per] = tentTrad
+
+    for per in trads:
+        trads[per].eliminaTraduccionesIntermedias()
 
     return trads
