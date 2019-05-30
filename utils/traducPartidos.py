@@ -19,7 +19,7 @@ class traducPartidos(object):
             self.inv[pagg].append(orig)
 
     def traduce(self, sigla):
-        return self.dir.get(sigla, None)
+        return self.dir.get(sigla, sigla)
 
     def quitaTrad(self, plocal):
         if plocal in self.dir:
