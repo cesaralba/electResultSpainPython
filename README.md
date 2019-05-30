@@ -118,8 +118,11 @@ ultEscr= allDF.groupby('amb').tail(n=1)
 # Analisis ESCRUTINIO 2019
 
 ~~~
-
-FILEESCR='/home/calba/devel/Elec2018/out/escrutiniogen201904.parquet'      
+import pandas as pd
+import numpy as np
+from utils.consEntidades import consolidaPartidosIntraperiodo, aplicaTraducciones
+   
+FILEESCR='/home/calba/Dropbox/SuperManager/escrutiniogen201904.parquet'      
 from utils.openJSONescr import ultEntrada, parquet2DF
 from utils.DHondt import DHondt
 
@@ -146,16 +149,28 @@ df2019escsE=df2019terr.join(df2019escs).loc[df2019final.idTerr.tipo.iloc[:,0]== 
 
 
 
-pAct = df2019circs.partidos.act
+#pAct = df2019circs.partidos.act
 
-df2019terr = pd.concat([df2019circs.idTerr.copy().droplevel(2,axis=1).droplevel(1,axis=1)],keys=['idTerr'],names
-df2019Info=df2019circs[[('totales', 'act', 'carg', np.nan),('totales', 'act', 'votbla', np.nan),('escrutinio', 'pexclus', np.nan, np.nan)]].copy()
-df2019Info.columns=pd.Index(['numEscs','votbla','pexclus'])
+#df2019terr = pd.concat([df2019circs.idTerr.copy().droplevel(2,axis=1).droplevel(1,axis=1)],keys=['idTerr'])
+#df2019Info=df2019circs[[('totales', 'act', 'carg', np.nan),('totales', 'act', 'votbla', np.nan),('escrutinio', 'pexclus', np.nan, np.nan)]].copy()
+#df2019Info.columns=pd.Index(['numEscs','votbla','pexclus'])
 
-df2019vot =  df2019circs.partidos.act.vot.copy()
-df2019vot.columns = df2019vot.columns
-df2019carg =  df2019circs.partidos.act.carg.copy()
-df2019carg.columns = df2019carg.columns
+#df2019vot =  df2019circs.partidos.act.vot.copy()
+#df2019carg =  df2019circs.partidos.act.carg.copy()
+
+subCol=[x for x in df2019.columns.to_list() if (x[0] == 'idTerr' or (x[0] == 'partidos' and x[1] == 'act'))]
+dfAct = df2019final[subCol]
+
+trad=None
+for g in df2019final.groupby(df2019final.idTerr.codAut.iloc[:,0]):
+    df=g[1]
+    print(df)
+    print(df[df[('idTerr','codProv',np.nan,np.nan)] == 99][('idTerr', 'tipo', np.nan, np.nan),('idTerr', 'nombre', np.nan, np.nan)])
+
+    trad=procesaGrCircs(g[1],claveDisc=('idTerr','codProv',np.nan,np.nan),trads=trad)
+trad=procesaGrCircs(df2019final[df2019final.idTerr.codProv.iloc[:,0]==99], claveDisc=('idTerr','codAut',np.nan,np.nan),trads=trad)
+
+#df2019final.groupby(df2019final.idTerr.codAut.iloc[:,0]).apply(procesaGrCircs,claveDisc=('idTerr','codProv',np.nan,np.nan))
 ~~~
          
          
