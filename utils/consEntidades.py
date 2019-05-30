@@ -1,6 +1,7 @@
 import numpy as np
+import pandas as pd
 
-from utils.deepdict import serie2deepdict, index2deepdict
+from .deepdict import serie2deepdict, index2deepdict
 from .traducPartidos import traducPartidos, asignaTradsKS
 
 
@@ -29,7 +30,7 @@ def aplicaTraducciones(serie, trads):
     return result
 
 
-def procesaGrCircs(df, claveDisc=None, trads=None):
+def consolidaPartidosIntraperiodo(df, claveDisc=None, trads=None):
     if trads is None:
         trads = {per: traducPartidos() for per in index2deepdict(df.partidos.columns)}
 
@@ -86,3 +87,32 @@ def procesaGrCircs(df, claveDisc=None, trads=None):
         trads[per].eliminaTraduccionesIntermedias()
 
     return trads
+
+
+def consolidaDFesp(df):
+    trad = None
+    for g in df.groupby(df.idTerr.codAut.iloc[:, 0]):
+        aux = g[1].copy()
+
+        trad = consolidaPartidosIntraperiodo(aux, claveDisc=('idTerr', 'codProv', np.nan, np.nan), trads=trad)
+
+    trad = consolidaPartidosIntraperiodo(df[df.idTerr.codProv.iloc[:, 0] == 99],
+                                         claveDisc=('idTerr', 'codAut', np.nan, np.nan), trads=trad)
+
+    newCols = sorted(list(set([(per, cat, trad[per].traduce(sigla)) for per, cat, sigla in df.partidos])))
+    auxResult = pd.DataFrame(data=np.zeros((df.shape[0], len(newCols)), dtype=np.float64),
+                             columns=pd.MultiIndex.from_tuples(newCols), index=df.partidos.index, dtype=np.float)
+
+    for c in df.partidos.columns:
+        if c in auxResult:
+            auxResult[c] += df.partidos[c].copy().fillna(0)
+        else:
+            tCol = (c[0], c[1], trad[c[0]].traduce(c[2]))
+            auxResult[tCol] += df.partidos[c].copy().fillna(0)
+
+    dfColsSinPartidos = [x for x in df.columns.to_list() if x[0] != 'partidos']
+
+    auxResult = pd.concat([auxResult], keys=['partidos'], axis=1)
+    result = pd.concat([df[dfColsSinPartidos], auxResult], axis=1)
+
+    return result

@@ -120,7 +120,7 @@ ultEscr= allDF.groupby('amb').tail(n=1)
 ~~~
 import pandas as pd
 import numpy as np
-from utils.consEntidades import procesaGrCircs, aplicaTraducciones
+from utils.consEntidades import consolidaPartidosIntraperiodo, aplicaTraducciones
    
 FILEESCR='/home/calba/Dropbox/SuperManager/escrutiniogen201904.parquet'      
 from utils.openJSONescr import ultEntrada, parquet2DF
