@@ -6,7 +6,7 @@ import pandas as pd
 
 def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('datosTerr', 'votBlanco'), umbral=0.0,
            calculaCosteAsiento=False, calculaUltimoElecto=False, calculaVotosSinEsc=False,
-           calculaCortadosUmabral=False):
+           calculaCortadosUmbral=False):
     if isinstance(fila, pd.core.series.Series):
         if votos in fila.index:
             Dvotos = fila[votos]
@@ -67,7 +67,8 @@ def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('
     listaSeriesFinal.append(elegidos)
 
     if calculaCosteAsiento:
-        costeAsiento = {('costeAsiento', x): umbVotos[x] / dictElegidos[x] for x in dictElegidos}
+        costeAsiento = {('costeAsiento', x): umbVotos[x] / dictElegidos[x] for x in dictElegidos if
+                        dictElegidos.get(x, 0) > 0}
         costeAsientoS = pd.Series(costeAsiento)
         listaSeriesFinal.append(costeAsientoS)
 
@@ -97,11 +98,12 @@ def DHondt(fila, votos='votCand', numescs=('datosTerr', 'numEscs'), votBlanco=('
         listaSeriesFinal.append(diferUltimo)
 
     if calculaVotosSinEsc:
-        votosSinEsc = {('votosSinAsiento', x): actVotos[x] if x not in dictElegidos else 0 for x in actVotos.index}
+        votosSinEsc = {('votosSinAsiento', x): actVotos[x] if (x not in dictElegidos or dictElegidos[x] == 0) else 0 for
+                       x in actVotos.index}
         votosSinEscS = pd.Series(votosSinEsc)
         listaSeriesFinal.append(votosSinEscS)
 
-    if calculaCortadosUmabral:
+    if calculaCortadosUmbral:
         noPasaUmbral = Dvotos[~(Dvotos > (sumVotos * Vumbral))].sum()
         votosUmbral = pd.Series({('votosUmbral', 'pasa'): umbVotos.sum(), ('votosUmbral', 'noPasa'): noPasaUmbral},
                                 dtype=np.uint64)
