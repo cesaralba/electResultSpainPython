@@ -120,7 +120,7 @@ ultEscr= allDF.groupby('amb').tail(n=1)
 ~~~
 import pandas as pd
 import numpy as np
-from utils.consEntidades import consolidaPartidosIntraperiodo, aplicaTraducciones
+from utils.consEntidades import consolidaPartidosIntraperiodo, aplicaTraducciones, consolidaDFesp, extraeNivel, preparaDatos
    
 FILEESCR='/home/calba/Dropbox/SuperManager/escrutiniogen201904.parquet'      
 from utils.openJSONescr import ultEntrada, parquet2DF
@@ -158,19 +158,32 @@ df2019escsE=df2019terr.join(df2019escs).loc[df2019final.idTerr.tipo.iloc[:,0]== 
 #df2019vot =  df2019circs.partidos.act.vot.copy()
 #df2019carg =  df2019circs.partidos.act.carg.copy()
 
-subCol=[x for x in df2019.columns.to_list() if (x[0] == 'idTerr' or (x[0] == 'partidos' and x[1] == 'act'))]
-dfAct = df2019final[subCol]
+#subCol=[x for x in df2019.columns.to_list() if (x[0] == 'idTerr' or (x[0] == 'partidos' and x[1] == 'act'))]
+#dfAct = df2019final[subCol]
 
-trad=None
-for g in df2019final.groupby(df2019final.idTerr.codAut.iloc[:,0]):
-    df=g[1]
-    print(df)
-    print(df[df[('idTerr','codProv',np.nan,np.nan)] == 99][('idTerr', 'tipo', np.nan, np.nan),('idTerr', 'nombre', np.nan, np.nan)])
+#trad=None
+#for g in df2019final.groupby(df2019final.idTerr.codAut.iloc[:,0]):
+#    df=g[1]
+#    print(df)
+#    print(df[df[('idTerr','codProv',np.nan,np.nan)] == 99][[('idTerr', 'tipo', np.nan, np.nan),('idTerr', 'nombre', np.nan, np.nan)]])
 
-    trad=procesaGrCircs(g[1],claveDisc=('idTerr','codProv',np.nan,np.nan),trads=trad)
-trad=procesaGrCircs(df2019final[df2019final.idTerr.codProv.iloc[:,0]==99], claveDisc=('idTerr','codAut',np.nan,np.nan),trads=trad)
+#    trad=consolidaPartidosIntraperiodo(g[1],claveDisc=('idTerr','codProv',np.nan,np.nan),trads=trad)
+#trad=consolidaPartidosIntraperiodo(df2019final[df2019final.idTerr.codProv.iloc[:,0]==99], claveDisc=('idTerr','codAut',np.nan,np.nan),trads=trad)
 
 #df2019final.groupby(df2019final.idTerr.codAut.iloc[:,0]).apply(procesaGrCircs,claveDisc=('idTerr','codProv',np.nan,np.nan))
+
+dfTraducido=consolidaDFesp(df2019final)
+
+dfTV,dfTC=preparaDatos(dfTraducido)
+
+dfTVnac=extraeNivel(dfTV,"ESPAÑA")
+dfTCnac=extraeNivel(dfTC,"ESPAÑA")
+
+dfTVprov=extraeNivel(dfTV,"CIRCUNSCRIPCIÓN ELECTORAL")
+dfTCprov=extraeNivel(dfTC,"CIRCUNSCRIPCIÓN ELECTORAL")
+
+aux=dfTVprov.apply(DHondt,axis=1,votos='partidos',numescs=('totales', 'carg'),votBlanco=('totales', 'votbla'),umbral=0.03,calculaCosteAsiento=True, calculaUltimoElecto=True,calculaVotosSinEsc=True,calculaCortadosUmbral=True) 
+
+
 ~~~
-         
          

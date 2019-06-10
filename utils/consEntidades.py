@@ -116,3 +116,45 @@ def consolidaDFesp(df):
     result = pd.concat([df[dfColsSinPartidos], auxResult], axis=1)
 
     return result
+
+
+def extraeNivel(df, nivel):
+    """
+
+    :param df:
+    :param nivel: Uno de 'CIRCUNSCRIPCIÓN ELECTORAL', 'COMUNIDAD', 'ESPAÑA'
+    :return:
+    """
+    clavesValidas = ['CIRCUNSCRIPCIÓN ELECTORAL', 'COMUNIDAD', 'ESPAÑA']
+    if nivel not in clavesValidas:
+        raise KeyError(
+            "nivel '%s' incorrecto. Debe ser uno de %s" % (nivel, ", ".join(map(lambda x: "'%s'" % x, clavesValidas))))
+
+    if isinstance(df.idTerr.tipo, pd.DataFrame):
+        return df[df.idTerr.tipo.iloc[:, 0] == nivel]
+    else:
+        return df[df.idTerr.tipo == nivel]
+
+
+def preparaDatos(df, per='act'):
+    """
+
+    :param df:
+    :param per:
+    :return:
+    """
+    dfClavesIDterr = [x for x in df.columns.to_list() if x[0] == 'idTerr']
+    dfClavesTot = [x for x in df.columns.to_list() if x[0] == 'totales' and x[1] == per]
+    dfClavesVot = [x for x in df.columns.to_list() if x[0] == 'partidos' and x[1] == per and x[2] == 'vot']
+    dfClavesCarg = [x for x in df.columns.to_list() if x[0] == 'partidos' and x[1] == per and x[2] == 'carg']
+
+    finalClavesIDterr = [(x[0], x[1]) for x in dfClavesIDterr]
+    finalClavesTot = [(x[0], x[2]) for x in dfClavesTot]
+    finalClavesVot = [(x[0], x[3]) for x in dfClavesVot]
+    finalClavesCarg = [(x[0], x[3]) for x in dfClavesCarg]
+
+    dfVot = df[dfClavesIDterr + dfClavesTot + dfClavesVot].copy()
+    dfCarg = df[dfClavesIDterr + dfClavesCarg].copy()
+    dfVot.columns = pd.MultiIndex.from_tuples(finalClavesIDterr + finalClavesTot + finalClavesVot)
+    dfCarg.columns = pd.MultiIndex.from_tuples(finalClavesIDterr + finalClavesCarg)
+    return dfVot, dfCarg
