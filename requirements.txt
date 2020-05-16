@@ -1,5 +1,7 @@
+
 pyshp
 pandas
+jupyter
 matplotlib
 numpy
 geopandas
