@@ -87,7 +87,7 @@ for i in FILELIST:
 
 ~~~
 
-Corregir los ficheros 0710 que fallan por formato random
+# Corregir los ficheros 0710 que fallan por formato random
 
 ~~~
 cat  07101505.DAT | awk '{ if ($0 !~ /^\s+$/){ if ($0 ~ /\s+$/) { VAL2=$0; gsub(/\s+$/,"",VAL2);  printf("%s%s\n",LINEA,VAL2); LINEA="" } else { LINEA=$0}}}' > 07101505.DATb
@@ -164,6 +164,9 @@ matPRO = setDFLabels(g2['PRO'], g1, 'PRO', 'NPRO'):
 ~~~
 
 # ESCRUTINIO
+=======
+# Procesado ESCRUTINIO
+
 
 ~~~
 from utils.openJSONescr import *
@@ -190,6 +193,7 @@ ultEscr= allDF.groupby('amb').tail(n=1)
 
 ~~~
 
+
 ~~~
 from seccCensales.matrAdyacencia import leeContornoSeccionesCensales, agrupaContornos, creaNumCols, creaMatrizRec, preparaAgrupacionConts, secNIV, vecinos2DF, setDFLabels
 from itertools import product
@@ -199,5 +203,77 @@ import pandas as pd
 
 g2011 = leeContornoSeccionesCensales("/home/Datasets/Elec/SeccionesCensales/years/2011/SECC_CE_20110101_03_R_INE.dbf")
 g2019 = leeContornoSeccionesCensales("/home/Datasets/Elec/SeccionesCensales/years/2019/SECC_CE_20190101.dbf")
+
+~~~
+
+# Analisis ESCRUTINIO 2019
+
+~~~
+import pandas as pd
+import numpy as np
+from utils.consEntidades import consolidaPartidosIntraperiodo, aplicaTraducciones, consolidaDFesp, extraeNivel, preparaDatos
+   
+FILEESCR='/home/calba/Dropbox/SuperManager/escrutiniogen201904.parquet'      
+from utils.openJSONescr import ultEntrada, parquet2DF
+from utils.DHondt import DHondt
+
+
+df2019 = parquet2DF(FILEESCR)
+df2019final = ultEntrada(df2019)
+
+df2019aux = pd.concat([df2019final.idTerr.droplevel(2,axis=1).droplevel(1,axis=1),
+                       df2019final.totales.act[['carg','votbla']].droplevel(1,axis=1),
+                       df2019final.escrutinio[['pexclus']].droplevel(2,axis=1).droplevel(1,axis=1)/100,   
+                      ],axis=1)
+
+df2019terr = pd.concat([df2019aux],axis=1,keys=['datosTerr'])
+df2019vots = pd.concat([df2019final.partidos.act.vot],axis=1,keys=['votCand'])
+df2019escs = pd.concat([df2019final.partidos.act.carg],axis=1,keys=['escsCand'])
+
+
+df2019votsC=df2019terr.join(df2019vots).loc[df2019final.idTerr.tipo.iloc[:,0]== 'CIRCUNSCRIPCIÓN ELECTORAL']
+df2019escsC=df2019terr.join(df2019escs).loc[df2019final.idTerr.tipo.iloc[:,0]== 'CIRCUNSCRIPCIÓN ELECTORAL']
+df2019votsA=df2019terr.join(df2019vots).loc[df2019final.idTerr.tipo.iloc[:,0]== 'COMUNIDAD']
+df2019escsA=df2019terr.join(df2019escs).loc[df2019final.idTerr.tipo.iloc[:,0]== 'COMUNIDAD']
+df2019votsE=df2019terr.join(df2019vots).loc[df2019final.idTerr.tipo.iloc[:,0]== 'ESPAÑA']
+df2019escsE=df2019terr.join(df2019escs).loc[df2019final.idTerr.tipo.iloc[:,0]== 'ESPAÑA']
+
+
+
+#pAct = df2019circs.partidos.act
+
+#df2019terr = pd.concat([df2019circs.idTerr.copy().droplevel(2,axis=1).droplevel(1,axis=1)],keys=['idTerr'])
+#df2019Info=df2019circs[[('totales', 'act', 'carg', np.nan),('totales', 'act', 'votbla', np.nan),('escrutinio', 'pexclus', np.nan, np.nan)]].copy()
+#df2019Info.columns=pd.Index(['numEscs','votbla','pexclus'])
+
+#df2019vot =  df2019circs.partidos.act.vot.copy()
+#df2019carg =  df2019circs.partidos.act.carg.copy()
+
+#subCol=[x for x in df2019.columns.to_list() if (x[0] == 'idTerr' or (x[0] == 'partidos' and x[1] == 'act'))]
+#dfAct = df2019final[subCol]
+
+#trad=None
+#for g in df2019final.groupby(df2019final.idTerr.codAut.iloc[:,0]):
+#    df=g[1]
+#    print(df)
+#    print(df[df[('idTerr','codProv',np.nan,np.nan)] == 99][[('idTerr', 'tipo', np.nan, np.nan),('idTerr', 'nombre', np.nan, np.nan)]])
+
+#    trad=consolidaPartidosIntraperiodo(g[1],claveDisc=('idTerr','codProv',np.nan,np.nan),trads=trad)
+#trad=consolidaPartidosIntraperiodo(df2019final[df2019final.idTerr.codProv.iloc[:,0]==99], claveDisc=('idTerr','codAut',np.nan,np.nan),trads=trad)
+
+#df2019final.groupby(df2019final.idTerr.codAut.iloc[:,0]).apply(procesaGrCircs,claveDisc=('idTerr','codProv',np.nan,np.nan))
+
+dfTraducido=consolidaDFesp(df2019final)
+
+dfTV,dfTC=preparaDatos(dfTraducido)
+
+dfTVnac=extraeNivel(dfTV,"ESPAÑA")
+dfTCnac=extraeNivel(dfTC,"ESPAÑA")
+
+dfTVprov=extraeNivel(dfTV,"CIRCUNSCRIPCIÓN ELECTORAL")
+dfTCprov=extraeNivel(dfTC,"CIRCUNSCRIPCIÓN ELECTORAL")
+
+aux=dfTVprov.apply(DHondt,axis=1,votos='partidos',numescs=('totales', 'carg'),votBlanco=('totales', 'votbla'),umbral=0.03,calculaCosteAsiento=True, calculaUltimoElecto=True,calculaVotosSinEsc=True,calculaCortadosUmbral=True) 
+
 
 ~~~

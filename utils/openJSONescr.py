@@ -440,11 +440,10 @@ def main():
 
     sourcedir = os.path.relpath(args['basedir'])
 
+    nomenclatorData = None
     if 'nomenclator' in args and args['nomenclator'] is not None:
         if os.path.isfile(args['nomenclator']):
             nomenclatorData = processNomenclator(args['nomenclator'])
-        else:
-            nomenclatorData = None
 
     allMerged = processResultsDir(sourcedir, year=args['year'], nomenclator=nomenclatorData)
     allDF = createDataframe(allMerged)
