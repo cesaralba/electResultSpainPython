@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from builtins import object
 from collections.abc import Iterable
 from itertools import product
 
@@ -10,7 +11,8 @@ from scipy.sparse import dok_matrix
 secNIV = ['CCAA', 'PRO', 'MUN', 'DIS', 'SEC']
 # secNIV = ['CCAA', 'PRO']
 
-resultBase = {'CCAA': {'claveAgr': 'CCA', 'extraCols': ['NCA', 'nCCA']},
+resultBase = {'PAIS': {'claveAgr': 'numcell'},
+              'CCAA': {'claveAgr': 'CCA', 'extraCols': ['NCA', 'nCCA']},
               'PRO': {'claveAgr': 'CPRO', 'extraCols': ['CCA', 'NCA', 'NPRO', 'nCCA', 'nCPRO'], 'nSUP': 'CCAA'},
               'MUN': {'claveAgr': 'CUMUN',
                       'extraCols': ['CCA', 'CPRO', 'CMUN', 'NCA', 'NPRO', 'NMUN', 'nCCA', 'nCPRO', 'nCMUN', 'nCUMUN'],
@@ -27,24 +29,6 @@ resultBase = {'CCAA': {'claveAgr': 'CCA', 'extraCols': ['NCA', 'nCCA']},
 def leeContornoSeccionesCensales(fname):
     baregdf = gpd.read_file(fname)
 
-    # Pasada a limpio (hasta que lo arreglen en INE, reportado).
-    # Esto es feo pero dado que sólo existe un fichero de contornos da un poco igual
-    baregdf.loc[baregdf.CCA == "16", 'NCA'] = "País Vasco"
-    baregdf.loc[baregdf.CPRO == "20", 'NPRO'] = "Gipuzkoa"
-    baregdf.loc[baregdf.CUMUN == "20069", 'NMUN'] = "Donostia-San Sebastián"
-    baregdf.loc[baregdf.CUMUN == "28092", 'NMUN'] = "Móstoles"
-
-    # Control de calidad de etiquetas (ya corregido en       leeContornoSeccionesCensales
-    # Encuentra nombres mal puestos
-    # reCA = pd.DataFrame(gdf.groupby('CCA').apply(lambda x: x['NCA'].value_counts()))
-    # reCA[(reCA.droplevel(1,axis=0).index.duplicated(keep=False))]
-    #
-    # reProv = gdf.groupby('CPRO').apply(lambda x: x['NPRO'].value_counts())
-    # reProv[(reProv.droplevel(1,axis=0).index.duplicated(keep=False))]
-    #
-    # reMun = gdf.groupby('CUMUN').apply(lambda x: x['NMUN'].value_counts())
-    # reMun[(reMun.droplevel(1,axis=0).index.duplicated(keep=False))]
-
     result = creaNumCols(baregdf, ['CCA', 'CPRO', 'CMUN', 'CDIS', 'CSEC', 'CUMUN', 'CUDIS', 'CUSEC'])
 
     result['numcell'] = 1  # Se usa para contar secciones para agrupación mayor
@@ -58,7 +42,7 @@ def checkList(obj):
 
 def agrupaContornos(df, claveAgr, extraCols=None):
     auxClave = claveAgr if checkList(claveAgr) else [claveAgr]
-    merged = df[auxClave + ['geometry', 'numcell']].dissolve(by=claveAgr, aggfunc=sum)
+    merged = df[set(auxClave + ['geometry', 'numcell'])].dissolve(by=claveAgr, aggfunc=sum)
 
     # Si no hay que poner etiqueta, our job is done
     if extraCols is None:
@@ -207,15 +191,16 @@ def creaMatrizJoblib(df, clave=None, matricesMR=None, JLconfig=None):
     return result
 
 
-def preparaAgrupacionConts(df):
+def preparaAgrupacionConts(df, listaNiveles=secNIV):
     """
 
     :param df:
     :return:
     """
-    result = {k: resultBase[k] for k in secNIV}
+    clavesAUsar = [k for k in secNIV if k in listaNiveles]
+    result = {k: resultBase[k] for k in clavesAUsar}
     # Prepara los agregados de contornos y datos auxiliares
-    for k in secNIV:
+    for k in clavesAUsar:
         aux = agrupaContornos(df, claveAgr=result[k]['claveAgr'], extraCols=result[k]['extraCols'])
         aux['idx'] = range(len(aux))
 
@@ -329,6 +314,23 @@ def setDFLabels(df, datos, clave, etiqueta):
         datos[clave]['contAgr'][etiqueta], axis=0, inplace=False)
 
 
+def controlCalidad(df):
+    """
+    Busca entidades con el nombre mal puesto. Más que mal puesto, duplicado:
+    :param df:
+    :return:
+    """
+    # Encuentra nombres mal puestos
+    reCA = pd.DataFrame(df.groupby('CCA').apply(lambda x: x['NCA'].value_counts()))
+    print("Comunidades\n", reCA[(reCA.droplevel(1, axis=0).index.duplicated(keep=False))])
+
+    reProv = pd.DataFrame(df.groupby('CPRO').apply(lambda x: x['NPRO'].value_counts()))
+    print("Provincias\n", reProv[(reProv.droplevel(1, axis=0).index.duplicated(keep=False))])
+
+    reMun = pd.DataFrame(df.groupby('CUMUN').apply(lambda x: x['NMUN'].value_counts()))
+    print("Municipios\n", reMun[(reMun.droplevel(1, axis=0).index.duplicated(keep=False))])
+
+
 def procesaArgumentos():
     parser = ArgumentParser()
 
@@ -337,35 +339,46 @@ def procesaArgumentos():
 
     parser.add('-l', dest='categs', type=str, required=True)
 
-
-
     args = parser.parse_args()
 
     result = vars(args)
 
-
-
     return result
 
 
+class seccionesCensales(object):
+    def __init__(self,fname,niveles=secNIV):
+        self.fname = fname
+        auxClaveNiveles = [k for k in secNIV if k in niveles]
 
+        if len(auxClaveNiveles) == 0:
+            raise ValueError(f'Niveles suministrados {niveles} no están entre los aceptables {secNIV}')
+        self.claveNiveles = auxClaveNiveles
+
+        self.contornos = {k: resultBase[k] for k in self.claveNiveles}
+        self.gdf = None
+
+
+    def lazyLoad(self):
+        if self.gdf is None:
+            self.gdf = leeContornoSeccionesCensales(self.fname)
+        return self.gdf
+
+    def agrupaCosas(self):
+        
+        pass
+        
 #####################################################################################################################
 #####################################################################################################################
 #####################################################################################################################
 #####################################################################################################################
 
 if __name__ == "__main__":
-
     args = procesaArgumentos()
 
     gdf = leeContornoSeccionesCensales(args.infile)
 
     contAgs = preparaAgrupacionConts(gdf)
-    matricesAdj = creaMatrizRec(contAgs,['CCAA', 'PRO', 'MUN', 'DIS', 'SEC'])
-
-    
-
+    matricesAdj = creaMatrizRec(contAgs, ['CCAA', 'PRO', 'MUN', 'DIS', 'SEC'])
 
 pass
-
-

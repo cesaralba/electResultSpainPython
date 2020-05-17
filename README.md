@@ -1,7 +1,12 @@
 
 
 # Snippets
+~~~
+. /home/calba/Dropbox/ENVS/ElecSpain/loadEnv 
+~~~
 ## Opciones carga ipython
+
+
 
 ~~~
 %load_ext autoreload
@@ -182,5 +187,17 @@ allMerged=processResultsDir(DIRBASE, nomenclator=nomenc, year=2019)
 allDF = createDataframe(allMerged)
 
 ultEscr= allDF.groupby('amb').tail(n=1) 
+
+~~~
+
+~~~
+from seccCensales.matrAdyacencia import leeContornoSeccionesCensales, agrupaContornos, creaNumCols, creaMatrizRec, preparaAgrupacionConts, secNIV, vecinos2DF, setDFLabels
+from itertools import product
+import numpy as np
+import pandas as pd
+
+
+g2011 = leeContornoSeccionesCensales("/home/Datasets/Elec/SeccionesCensales/years/2011/SECC_CE_20110101_03_R_INE.dbf")
+g2019 = leeContornoSeccionesCensales("/home/Datasets/Elec/SeccionesCensales/years/2019/SECC_CE_20190101.dbf")
 
 ~~~
