@@ -1,7 +1,12 @@
 
 
 # Snippets
+~~~
+. /home/calba/Dropbox/ENVS/ElecSpain/loadEnv 
+~~~
 ## Opciones carga ipython
+
+
 
 ~~~
 %load_ext autoreload
@@ -88,7 +93,80 @@ for i in FILELIST:
 cat  07101505.DAT | awk '{ if ($0 !~ /^\s+$/){ if ($0 ~ /\s+$/) { VAL2=$0; gsub(/\s+$/,"",VAL2);  printf("%s%s\n",LINEA,VAL2); LINEA="" } else { LINEA=$0}}}' > 07101505.DATb
 ~~~
 
+# Secciones censales
+
+~~~
+In [26]: gdf.columns
+Out[26]:
+Index(['OBJECTID', 'CUSEC', 'CUMUN', 'CSEC', 'CDIS', 'CMUN', 'CPRO', 'CCA',
+       'CUDIS', 'OBS', 'CNUT0', 'CNUT1', 'CNUT2', 'CNUT3', 'CLAU2', 'NPRO',
+       'NCA', 'NMUN', 'Shape_Leng', 'Shape_area', 'Shape_len', 'geometry',
+       'count'],
+      dtype='object')
+
+~~~
+
+~~~
+import geopandas as gpd
+from seccCensales.matrAdyacencia import leeContornoSeccionesCensales, agrupaContornos, creaNumCols, creaMatrizRec, preparaAgrupacionConts, secNIV, vecinos2DF, setDFLabels
+from itertools import product
+import numpy as np
+import pandas as pd
+
+#Carga los contornos de 2011
+gdf = leeContornoSeccionesCensales("/home/Datasets/Elec/SeccionesCensales/years/2019/SECC_CE_20190101.dbf")
+
+
+
+
+gdf['count']=1 # Para contar secciones en el territorio
+
+%time ccas = creaNumCols(agrupaContornos(gdf, claveAgr=['CCA'],extraCols=['NCA']), cols=['CCA'])  # ~ 60s  
+%time provs = creaNumCols(agrupaContornos(gdf, claveAgr=['CPRO'],extraCols=['CCA', 'NCA', 'NPRO']), cols=['CCA','CPRO'])  # ~ 50s
+%time muns = creaNumCols(agrupaContornos(gdf, claveAgr=['CUMUN'],extraCols=['CCA', 'CPRO', 'CMUN','NCA', 'NPRO', 'NMUN']), cols=['CCA','CPRO', 'CMUN','CUMUN']) # ~ 22s   
+%time dis = creaNumCols(agrupaContornos(gdf, claveAgr=['CUDIS'],extraCols=['CCA', 'CPRO', 'CMUN','CDIS','CUMUN', 'NCA', 'NPRO', 'NMUN']), cols=['CCA','CPRO', 'CMUN','CDIS','CUMUN','CUDIS']) # ~15s
+%time secs = creaNumCols(gdf,cols=[ 'CCA', 'CPRO', 'CMUN','CDIS','CSEC', 'CUMUN','CUDIS', 'CUSEC'])  # < 1s
+
+%time mcca = creaMatriz(ccas,clave='nCCA')
+matricesAdj = { 'nCCA': mcca }
+%time mprovs = creaMatriz(provs,clave='nCPRO',matricesMR=matricesAdj)
+matricesAdj = { 'nCPRO': mprovs }
+
+for p in product(cca2.index, cca2.index):
+    d0 = cca2.loc[p[0]]
+    d1 = cca2.loc[p[1]]
+    g0 = d0.geometry
+    g1 = d1.geometry
+    print(p[0],p[1],d0['NCA'],d1['NCA'],g0.intersects(g1))
+
+%time g1 = preparaAgrupacionConts(gdf) ~ 3 min
+%time g2 = creaMatrizRec(g1,['CCAA', 'PRO', 'MUN', 'DIS', 'SEC']) ~ 1h
+  
+for k in g1:
+    print(k,g1[k].keys())
+
+for k in g2:
+    print(k,len(g2[k]))
+
+
+for k in g1:
+    print(k,g1[k].keys())
+    if 'sup2k' in g1[k]:
+        print(k,'sup2k\n', g1[k]['sup2k'].apply(len).value_counts().sort_index())
+
+for k in g2:
+    print(k)
+        print(k, g2[k].apply(sum).value_counts().sort_index())
+
+matAUT = setDFLabels(g2['CCAA'], g1, 'CCAA', 'NCA'):
+matPRO = setDFLabels(g2['PRO'], g1, 'PRO', 'NPRO'):
+
+~~~
+
+# ESCRUTINIO
+=======
 # Procesado ESCRUTINIO
+
 
 ~~~
 from utils.openJSONescr import *
@@ -112,6 +190,19 @@ allMerged=processResultsDir(DIRBASE, nomenclator=nomenc, year=2019)
 allDF = createDataframe(allMerged)
 
 ultEscr= allDF.groupby('amb').tail(n=1) 
+
+~~~
+
+
+~~~
+from seccCensales.matrAdyacencia import leeContornoSeccionesCensales, agrupaContornos, creaNumCols, creaMatrizRec, preparaAgrupacionConts, secNIV, vecinos2DF, setDFLabels
+from itertools import product
+import numpy as np
+import pandas as pd
+
+
+g2011 = leeContornoSeccionesCensales("/home/Datasets/Elec/SeccionesCensales/years/2011/SECC_CE_20110101_03_R_INE.dbf")
+g2019 = leeContornoSeccionesCensales("/home/Datasets/Elec/SeccionesCensales/years/2019/SECC_CE_20190101.dbf")
 
 ~~~
 
@@ -186,4 +277,3 @@ aux=dfTVprov.apply(DHondt,axis=1,votos='partidos',numescs=('totales', 'carg'),vo
 
 
 ~~~
-         

@@ -1,6 +1,11 @@
+
+pyshp
+pandas
 jupyter
-
-babel
-geopandas
 matplotlib
-
+numpy
+geopandas
+joblib
+babel
+scipy
+psutil
