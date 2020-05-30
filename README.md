@@ -114,7 +114,7 @@ import numpy as np
 import pandas as pd
 
 #Carga los contornos de 2011
-gdf = leeContornoSeccionesCensales("/home/calba/devel/elecResultSpain/seccCens/contornos/SECC_CPV_E_20111101_01_R_INE.dbf")
+gdf = leeContornoSeccionesCensales("/home/Datasets/Elec/SeccionesCensales/years/2019/SECC_CE_20190101.dbf")
 
 
 
