@@ -98,7 +98,7 @@ cat  07101505.DAT | awk '{ if ($0 !~ /^\s+$/){ if ($0 ~ /\s+$/) { VAL2=$0; gsub(
 ~~~
 In [26]: gdf.columns
 Out[26]:
-Index(['OBJECTID', 'CUSEC', 'CUMUN', 'CSEC', 'CDIS', 'CMUN', 'CPRO', 'CCA',
+Index(['OBJECTID', 'CUSEC', 'CUMUN', 'CSEC', 'CDIS', 'CMUN', 'nCPRO', 'CCA',
        'CUDIS', 'OBS', 'CNUT0', 'CNUT1', 'CNUT2', 'CNUT3', 'CLAU2', 'NPRO',
        'NCA', 'NMUN', 'Shape_Leng', 'Shape_area', 'Shape_len', 'geometry',
        'count'],
@@ -122,10 +122,10 @@ gdf = leeContornoSeccionesCensales("/home/Datasets/Elec/SeccionesCensales/years/
 gdf['count']=1 # Para contar secciones en el territorio
 
 %time ccas = creaNumCols(agrupaContornos(gdf, claveAgr=['CCA'],extraCols=['NCA']), cols=['CCA'])  # ~ 60s  
-%time provs = creaNumCols(agrupaContornos(gdf, claveAgr=['CPRO'],extraCols=['CCA', 'NCA', 'NPRO']), cols=['CCA','CPRO'])  # ~ 50s
-%time muns = creaNumCols(agrupaContornos(gdf, claveAgr=['CUMUN'],extraCols=['CCA', 'CPRO', 'CMUN','NCA', 'NPRO', 'NMUN']), cols=['CCA','CPRO', 'CMUN','CUMUN']) # ~ 22s   
-%time dis = creaNumCols(agrupaContornos(gdf, claveAgr=['CUDIS'],extraCols=['CCA', 'CPRO', 'CMUN','CDIS','CUMUN', 'NCA', 'NPRO', 'NMUN']), cols=['CCA','CPRO', 'CMUN','CDIS','CUMUN','CUDIS']) # ~15s
-%time secs = creaNumCols(gdf,cols=[ 'CCA', 'CPRO', 'CMUN','CDIS','CSEC', 'CUMUN','CUDIS', 'CUSEC'])  # < 1s
+%time provs = creaNumCols(agrupaContornos(gdf, claveAgr=['nCPRO'],extraCols=['CCA', 'NCA', 'NPRO']), cols=['CCA','nCPRO'])  # ~ 50s
+%time muns = creaNumCols(agrupaContornos(gdf, claveAgr=['CUMUN'],extraCols=['CCA', 'nCPRO', 'CMUN','NCA', 'NPRO', 'NMUN']), cols=['CCA','nCPRO', 'CMUN','CUMUN']) # ~ 22s   
+%time dis = creaNumCols(agrupaContornos(gdf, claveAgr=['CUDIS'],extraCols=['CCA', 'nCPRO', 'CMUN','CDIS','CUMUN', 'NCA', 'NPRO', 'NMUN']), cols=['CCA','nCPRO', 'CMUN','CDIS','CUMUN','CUDIS']) # ~15s
+%time secs = creaNumCols(gdf,cols=[ 'CCA', 'nCPRO', 'CMUN','CDIS','CSEC', 'CUMUN','CUDIS', 'CUSEC'])  # < 1s
 
 %time mcca = creaMatriz(ccas,clave='nCCA')
 matricesAdj = { 'nCCA': mcca }

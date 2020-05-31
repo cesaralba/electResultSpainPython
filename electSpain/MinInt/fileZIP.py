@@ -4,7 +4,7 @@ from pandas import read_fwf
 from io import StringIO
 from collections import defaultdict
 
-from electSpain.MinInt.fileDescriptions import fieldDescriptions, tipoEleccion, tipoFichero
+from electSpain.MinInt.fileDescriptions import fieldDescriptions, tipoEleccion, tipoFichero, fieldTypes
 
 import re
 
@@ -46,7 +46,7 @@ def tipoFich2fwfParams(fileType, fileDescrs):
 
     anchos = [x[0] for x in fileDescr]
     nombreCols = [x[1] for x in fileDescr]
-    tipoCols = {x[1]: x[2] for x in fileDescr}
+    tipoCols = {x[1]: (x[2] if len(x) ==3 else fieldTypes[x[1]]) for x in fileDescr}
 
     return anchos, nombreCols, tipoCols
 
@@ -70,6 +70,7 @@ def readPandaFWF(ziphandle, filenameInfo, elType, fileType):
     except ValueError as exc:
         print("Problemas leyendo el fichero %s: %s" % (filename, exc))
         return None
+
 
     return result
 
