@@ -1,12 +1,11 @@
-
-from utils.zipfiles import unzipfile
-from pandas import read_fwf
-from io import StringIO
+import re
 from collections import defaultdict
+from io import StringIO
+
+from pandas import read_fwf
 
 from electSpain.MinInt.fileDescriptions import fieldDescriptions, tipoEleccion, tipoFichero, fieldTypes
-
-import re
+from utils.zipfiles import unzipfile
 
 minIntPattern = "(:?.*/)?(\d{2})(\d{2})(\d{2})(\d{2})\.DAT"
 
@@ -46,13 +45,14 @@ def tipoFich2fwfParams(fileType, fileDescrs):
 
     anchos = [x[0] for x in fileDescr]
     nombreCols = [x[1] for x in fileDescr]
-    tipoCols = {x[1]: (x[2] if len(x) ==3 else fieldTypes[x[1]]) for x in fileDescr}
+    tipoCols = {x[1]: (x[2] if len(x) == 3 else fieldTypes[x[1]]) for x in fileDescr}
 
-    return anchos, nombreCols, tipoCols
+    converters = {nc: tc for nc, tc in tipoCols.items()}
+    return anchos, nombreCols, tipoCols, converters
 
 
 def readPandaFWF(ziphandle, filenameInfo, elType, fileType):
-    anchos, colnames, tipos = tipoFich2fwfParams(fileType, fieldDescriptions)
+    anchos, colnames, tipos, convFunctions = tipoFich2fwfParams(fileType, fieldDescriptions)
 
     try:
         filename = filenameInfo['ficheros'][elType][fileType]
@@ -64,13 +64,12 @@ def readPandaFWF(ziphandle, filenameInfo, elType, fileType):
     data = StringIO(ziphandle.read(filename).decode('cp1252'))
 
     try:
-        result = read_fwf(data, header=None, widths=anchos, names=colnames, dtype=tipos,
+        result = read_fwf(data, header=None, widths=anchos, names=colnames, converters=convFunctions,
                           iterator=False, index_col=False, debug=True, error_bad_lines=False,
                           warn_bad_lines=True)
     except ValueError as exc:
         print("Problemas leyendo el fichero %s: %s" % (filename, exc))
         return None
-
 
     return result
 
