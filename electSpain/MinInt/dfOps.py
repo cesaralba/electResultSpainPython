@@ -7,7 +7,7 @@ import pandas as pd
 colsControl = dict(votCand='votCands', numPersElegidas='numEscs')
 
 colsIDProc = ['tipoElec', 'yearElec', 'mesElec', 'numVuelta']
-colsIDEnt = ['codAut', 'codProv', 'codMunic', 'numDistr', 'codSeccion', 'codMesa']
+colsIDEnt = ['CCA', 'CPRO', 'CMUN', 'CDIS', 'CSEC', 'codMesa']
 columnsIdent = colsIDProc + colsIDEnt
 col2remove = ['codDP', 'codCom']
 
@@ -171,35 +171,35 @@ def aplanaResultados(reselect, columnaDato='votCand'):
         clave = 'datosSupMunicResult'
         auxDF = result[clave]
 
-        result['provResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[99], level='codProv')])
+        result['provResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[99], level='CPRO')])
         result['autResult'] = recolocaTerrColumns(
-            auxDF[auxDF.index.isin(values=[99], level='codProv') & ~ auxDF.index.isin(values=[99], level='codAut')])
-        result['totResult'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='codAut')])
+            auxDF[auxDF.index.isin(values=[99], level='CPRO') & ~ auxDF.index.isin(values=[99], level='CCA')])
+        result['totResult'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='CCA')])
 
     if 'datosMunicResult' in result:
         clave = 'datosMunicResult'
         auxDF = result[clave]
 
-        result['municResult'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='numDistr')])
-        result['distrResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[99], level='numDistr')])
+        result['municResult'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='CDIS')])
+        result['distrResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[99], level='CDIS')])
 
     if 'datosMesasResult' in result:
         clave = 'datosMesasResult'
         auxDF = result[clave]
 
-        result['mesaResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[999], level='codMunic')])
-        result['totCERA'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='codAut')])
+        result['mesaResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[999], level='CMUN')])
+        result['totCERA'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='CCA')])
         result['autCERA'] = recolocaTerrColumns(
-            auxDF[auxDF.index.isin(values=[999], level='codMunic') & auxDF.index.isin(values=[99], level='codProv')])
+            auxDF[auxDF.index.isin(values=[999], level='CMUN') & auxDF.index.isin(values=[99], level='CPRO')])
         result['provCERA'] = recolocaTerrColumns(
-            auxDF[auxDF.index.isin(values=[999], level='codMunic') & ~auxDF.index.isin(values=[99], level='codProv')])
+            auxDF[auxDF.index.isin(values=[999], level='CMUN') & ~auxDF.index.isin(values=[99], level='CPRO')])
 
     return result
 
 
 def tipoClaveDatos(k, defaultvalue):
 
-    iTerr = ['codAut', 'codProv', 'codDistr', 'codPJ', 'codMunic', 'numDistr', 'codSeccion', 'codMesa', 'nomAmbito',
+    iTerr = ['CCA', 'CPRO', 'codDistrElect', 'codPJ', 'CMUN', 'CDIS', 'CSEC', 'codMesa', 'nomAmbito',
              'nomMunic']
 
     result = 'idTerr' if k in iTerr else defaultvalue
@@ -215,7 +215,7 @@ def recolocaTerrColumns(df):
     :return: dataframe nuevo con las columnas recolocadas
     """
 
-    iTerr = ['codAut', 'codProv', 'codDistr', 'codPJ', 'codMunic', 'numDistr', 'codSeccion', 'codMesa', 'nomAmbito',
+    iTerr = ['CCA', 'CPRO', 'codDistrElect', 'codPJ', 'CMUN', 'CDIS', 'CSEC', 'codMesa', 'nomAmbito',
              'nomMunic']
 
     groupKeys = defaultdict(list)
@@ -256,17 +256,17 @@ def getExtraInfo(reselect):
 
     if 'datosMunic' in reselect:
         dfwrk = reselect['datosMunic']
-        result['municData'] = dfwrk[dfwrk['numDistr'] == 99][['codProv', 'codMunic', 'codPJ', 'codDistr', 'nomMunic']]
-        result['municDistrData'] = dfwrk[dfwrk['numDistr'] != 99][
-            ['codProv', 'codMunic', 'numDistr', 'nomMunic']].rename({'nomMunic': 'nomDistr'}, axis=1)
+        result['municData'] = dfwrk[dfwrk['CDIS'] == 99][['CPRO', 'CMUN', 'codPJ', 'codDistrElect', 'nomMunic']]
+        result['municDistrData'] = dfwrk[dfwrk['CDIS'] != 99][
+            ['CPRO', 'CMUN', 'CDIS', 'nomMunic']].rename({'nomMunic': 'nomDistr'}, axis=1)
 
     if 'datosSupMunic' in reselect:
         dfwrk = reselect['datosSupMunic']
-        result['provData'] = dfwrk[dfwrk['codProv'] != 99][['codProv', 'nomAmbito']].rename({'nomAmbito': 'nomProv'},
+        result['provData'] = dfwrk[dfwrk['CPRO'] != 99][['CPRO', 'nomAmbito']].rename({'nomAmbito': 'nomProv'},
                                                                                             axis=1)
-        result['autData'] = dfwrk[(dfwrk['codProv'] == 99) & (dfwrk['codAut'] != 99)][['codAut', 'nomAmbito']].rename(
+        result['autData'] = dfwrk[(dfwrk['CPRO'] == 99) & (dfwrk['CCA'] != 99)][['CCA', 'nomAmbito']].rename(
             {'nomAmbito': 'nomAut'}, axis=1)
-        result['totData'] = dfwrk[dfwrk['codAut'] == 99][['codAut', 'nomAmbito']].rename({'nomAmbito': 'nomTot'},
+        result['totData'] = dfwrk[dfwrk['CCA'] == 99][['CCA', 'nomAmbito']].rename({'nomAmbito': 'nomTot'},
                                                                                          axis=1)
 
     return result

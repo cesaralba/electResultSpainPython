@@ -2,7 +2,7 @@
 # Descripcion de los ficheros incluidos en un .ZIP del Ministerio del Interior
 #
 
-import pandas as pd
+import numpy as np
 
 tipoEleccion = {
     '01': 'Referéndum',
@@ -110,9 +110,9 @@ fieldDescriptions = {
         (4, "yearElec"),
         (2, "mesElec"),
         (1, "numVuelta"),
-        (2, "codProv"),  # (99 en elecciones al Parlamento Europeo)
-        (1, "codDistr"),  # Distrito electoral 9 en elecciones que no tienen este tipo de circunscripción
-        (3, "codMunic"),  # (elecciones municipales) o del Senador (Senado). En el resto de procesos 999
+        (2, "CPRO"),  # (99 en elecciones al Parlamento Europeo)
+        (1, "codDistrElect"),  # Distrito electoral 9 en elecciones que no tienen este tipo de circunscripción
+        (3, "CMUN"),  # (elecciones municipales) o del Senador (Senado). En el resto de procesos 999
         (6, "codCand"),
         (3, "numOrdenPersCand"),
         (1, "tipoPersCand"),  # (T = Titular, " S = Suplente)
@@ -132,12 +132,12 @@ fieldDescriptions = {
         (4, "yearElec"),
         (2, "mesElec"),
         (1, "numVuelta"),
-        (2, "codAut"),
-        (2, "codProv"),
-        (3, "codMunic"),
-        (2, "numDistr"),  # Distrito municipal 99 si es el total municipal
+        (2, "CCA"),
+        (2, "CPRO"),
+        (3, "CMUN"),
+        (2, "CDIS"),  # Distrito municipal 99 si es el total municipal
         (100, "nomMunic"),  # o del distrito municipal
-        (1, "codDistr"),  # Distrito electoral 0 en elecciones que no tienen este tipo de circunscripción
+        (1, "codDistrElect"),  # Distrito electoral 0 en elecciones que no tienen este tipo de circunscripción
         (3, "codPJ"),
         (3, "codDP"),
         (3, "codCom"),  # Comarca
@@ -163,9 +163,9 @@ fieldDescriptions = {
         (4, "yearElec"),
         (2, "mesElec"),
         (1, "numVuelta"),
-        (2, "codProv"),
-        (3, "codMunic"),
-        (2, "numDistr"),  # Distrito municipal 99 si es el total municipal
+        (2, "CPRO"),
+        (3, "CMUN"),
+        (2, "CDIS"),  # Distrito municipal 99 si es el total municipal
         (6, "codCand"),
         (8, "votCand"),
         (3, "numPersElegidas")
@@ -176,9 +176,9 @@ fieldDescriptions = {
         (4, "yearElec"),
         (2, "mesElec"),
         (1, "numVuelta"),
-        (2, "codAut"),  # En el caso de Total Nacional, llevará 99
-        (2, "codProv"),  # 99 si se trata de datos a nivel Total Comunidad o Total Nacional
-        (1, "codDistr"),  # Distrito electoral 9 en datos a nivel Total Provincial, Comunidad o Nacional
+        (2, "CCA"),  # En el caso de Total Nacional, llevará 99
+        (2, "CPRO"),  # 99 si se trata de datos a nivel Total Comunidad o Total Nacional
+        (1, "codDistrElect"),  # Distrito electoral 9 en datos a nivel Total Provincial, Comunidad o Nacional
         (50, "nomAmbito"),
         (8, "pobDerecho"),
         (5, "numMesas"),
@@ -202,9 +202,9 @@ fieldDescriptions = {
         (4, "yearElec"),
         (2, "mesElec"),
         (1, "numVuelta"),
-        (2, "codAut"),  # En el caso de Total Nacional, llevará 99
-        (2, "codProv"),  # 99 si se trata de datos a nivel Total Comunidad o Total Nacional
-        (1, "codDistr"),  # Distrito electoral 9 en datos a nivel Total Provincial, Comunidad o Nacional
+        (2, "CCA"),  # En el caso de Total Nacional, llevará 99
+        (2, "CPRO"),  # 99 si se trata de datos a nivel Total Comunidad o Total Nacional
+        (1, "codDistrElect"),  # Distrito electoral 9 en datos a nivel Total Provincial, Comunidad o Nacional
         (6, "codCand"),
         (8, "votCand"),
         (5, "numPersElegidas")
@@ -215,11 +215,11 @@ fieldDescriptions = {
         (4, "yearElec"),
         (2, "mesElec"),
         (1, "numVuelta"),
-        (2, "codAut"),  # 99 si se trata del Total Nacional del C.E.R.A
-        (2, "codProv"),  # 99 si se trata del Total Nacional o Autonómico del C.E.R.A
-        (3, "codMunic"),  # (999 = C.E.R.A.)
-        (2, "numDistr"),  # 01 si distrito único. En C.E.R.A., núm del ‘Distrito Electoral’ o 09 si provincia
-        (4, "codSeccion"),  # (tres dígitos seguidos de un espacio, letra mayúscula u otro dígito)
+        (2, "CCA"),  # 99 si se trata del Total Nacional del C.E.R.A
+        (2, "CPRO"),  # 99 si se trata del Total Nacional o Autonómico del C.E.R.A
+        (3, "CMUN"),  # (999 = C.E.R.A.)
+        (2, "CDIS"),  # 01 si distrito único. En C.E.R.A., núm del ‘Distrito Electoral’ o 09 si provincia
+        (4, "CSEC"),  # (tres dígitos seguidos de un espacio, letra mayúscula u otro dígito)
         (1, "codMesa"),  # (una letra mayúscula identificando la mesa o una ‘U’ en caso de mesa única)
         (7, "censINE"),
         (7, "censEscr"),
@@ -240,11 +240,11 @@ fieldDescriptions = {
         (4, "yearElec"),
         (2, "mesElec"),
         (1, "numVuelta"),
-        (2, "codAut"),  # 99 si se trata del Total Nacional del C.E.R.A
-        (2, "codProv"),  # 99 si se trata del Total Nacional o Autonómico del C.E.R.A
-        (3, "codMunic"),  # (999 = C.E.R.A.)
-        (2, "numDistr"),  # 01 si distrito único. En C.E.R.A., núm del ‘Distrito Electoral’ o 09 si provincia
-        (4, "codSeccion"),  # (tres dígitos seguidos de un espacio, letra mayúscula u otro dígito)
+        (2, "CCA"),  # 99 si se trata del Total Nacional del C.E.R.A
+        (2, "CPRO"),  # 99 si se trata del Total Nacional o Autonómico del C.E.R.A
+        (3, "CMUN"),  # (999 = C.E.R.A.)
+        (2, "CDIS"),  # 01 si distrito único. En C.E.R.A., núm del ‘Distrito Electoral’ o 09 si provincia
+        (4, "CSEC"),  # (tres dígitos seguidos de un espacio, letra mayúscula u otro dígito)
         (1, "codMesa"),  # (una letra mayúscula identificando la mesa o una ‘U’ en caso de mesa única)
         (6, "codCand"),  # Código de la candidatura o del Senador en elecciones al Senado
         (7, "votCand")
@@ -255,9 +255,9 @@ fieldDescriptions = {
         (4, "yearElec"),
         (2, "mesElec"),
         (1, "numVuelta"),
-        (2, "codAut"),
-        (2, "codProv"),
-        (3, "codMunic"),
+        (2, "CCA"),
+        (2, "CPRO"),
+        (3, "CMUN"),
         (100, "nomMunic"),  # o del distrito municipal
         (3, "codPJ"),
         (3, "codDP"),
@@ -282,8 +282,8 @@ fieldDescriptions = {
         (4, "yearElec"),
         (2, "mesElec"),
         (1, "numVuelta"),
-        (2, "codProv"),
-        (3, "codMunic"),
+        (2, "CPRO"),
+        (3, "CMUN"),
         (6, "codCand"),
         (3, "votCand"),
         (2, "numCandsObten"),
@@ -302,82 +302,82 @@ fieldDescriptions = {
 }
 
 fieldTypes = {
-    'adjuntaFich01': pd.Int32Dtype,
-    'adjuntaFich02': pd.Int32Dtype,
-    'adjuntaFich03': pd.Int32Dtype,
-    'adjuntaFich04': pd.Int32Dtype,
-    'adjuntaFich05': pd.Int32Dtype,
-    'adjuntaFich0510': pd.Int32Dtype,
-    'adjuntaFich06': pd.Int32Dtype,
-    'adjuntaFich0610': pd.Int32Dtype,
-    'adjuntaFich07': pd.Int32Dtype,
-    'adjuntaFich0710': pd.Int32Dtype,
-    'adjuntaFich08': pd.Int32Dtype,
-    'adjuntaFich0810': pd.Int32Dtype,
-    'adjuntaFich09': pd.Int32Dtype,
-    'adjuntaFich10': pd.Int32Dtype,
-    'adjuntaFich1104': pd.Int32Dtype,
-    'adjuntaFich1204': pd.Int32Dtype,
-    'ambito': pd.StringDtype,
-    'ape1PersCand': pd.StringDtype,
-    'ape2PersCand': pd.StringDtype,
-    'censCEREescr': pd.Int32Dtype,
-    'censEscr': pd.Int32Dtype,
-    'censINE': pd.Int32Dtype,
-    'codAmbito': pd.Int32Dtype,
-    'codAut': pd.Int32Dtype,
-    'codCand': pd.Int32Dtype,
-    'codCandAcumAut': pd.Int32Dtype,
-    'codCandAcumNac': pd.Int32Dtype,
-    'codCandAcumProv': pd.Int32Dtype,
-    'codCom': pd.Int32Dtype,
-    'codDP': pd.Int32Dtype,
-    'codDistr': pd.Int32Dtype,
-    'codMesa': pd.StringDtype,
-    'codMunic': pd.Int32Dtype,
-    'codPJ': pd.Int32Dtype,
-    'codProv': pd.Int32Dtype,
-    'codSeccion': pd.StringDtype,
-    'datOfic': pd.StringDtype,
-    'dniPersCand': pd.StringDtype,
-    'elegidaPersCand': pd.StringDtype,
-    'fecNacDiaPersCand': pd.Int32Dtype,
-    'fecNacMesPersCand': pd.Int32Dtype,
-    'fecNacYearPersCand': pd.Int32Dtype,
-    'fechaDIA': pd.Int32Dtype,
-    'fechaMES': pd.Int32Dtype,
-    'fechaYEAR': pd.Int32Dtype,
-    'horaApert': pd.StringDtype,
-    'horaAvance1': pd.StringDtype,
-    'horaAvance2': pd.StringDtype,
-    'horaCierre': pd.StringDtype,
-    'mesElec': pd.Int32Dtype,
-    'nomAmbito': pd.StringDtype,
-    'nomMunic': pd.StringDtype,
-    'nomPersCand': pd.StringDtype,
-    'nombreCand': pd.StringDtype,
-    'numCandsObten': pd.Int32Dtype,
-    'numDistr': pd.Int32Dtype,
-    'numEscs': pd.Int32Dtype,
-    'numMesas': pd.Int32Dtype,
-    'numOrdenPersCand': pd.Int32Dtype,
-    'numPersElegidas': pd.Int32Dtype,
-    'numVuelta': pd.Int32Dtype,
-    'pobDerecho': pd.Int32Dtype,
-    'sexPersCand': pd.StringDtype,
-    'siglaCand': pd.StringDtype,
-    'tipoElec': pd.Int32Dtype,
-    'tipoMunic': pd.Int32Dtype,
-    'tipoPersCand': pd.StringDtype,
-    'totVotCERE': pd.Int32Dtype,
-    'votAvance1': pd.Int32Dtype,
-    'votAvance2': pd.Int32Dtype,
-    'votBlanco': pd.Int32Dtype,
-    'votCand': pd.Int32Dtype,
-    'votCands': pd.Int32Dtype,
-    'votNO': pd.Int32Dtype,
-    'votNulo': pd.Int32Dtype,
-    'votPersCand': pd.Int32Dtype,
-    'votSI': pd.Int32Dtype,
-    'yearElec': pd.Int32Dtype
+    'adjuntaFich01': np.uint32,
+    'adjuntaFich02': np.uint32,
+    'adjuntaFich03': np.uint32,
+    'adjuntaFich04': np.uint32,
+    'adjuntaFich05': np.uint32,
+    'adjuntaFich0510': np.uint32,
+    'adjuntaFich06': np.uint32,
+    'adjuntaFich0610': np.uint32,
+    'adjuntaFich07': np.uint32,
+    'adjuntaFich0710': np.uint32,
+    'adjuntaFich08': np.uint32,
+    'adjuntaFich0810': np.uint32,
+    'adjuntaFich09': np.uint32,
+    'adjuntaFich10': np.uint32,
+    'adjuntaFich1104': np.uint32,
+    'adjuntaFich1204': np.uint32,
+    'ambito': str,
+    'ape1PersCand': str,
+    'ape2PersCand': str,
+    'censCEREescr': np.uint32,
+    'censEscr': np.uint32,
+    'censINE': np.uint32,
+    'codAmbito': np.uint32,
+    'CCA': str,
+    'codCand': np.uint32,
+    'codCandAcumAut': np.uint32,
+    'codCandAcumNac': np.uint32,
+    'codCandAcumProv': np.uint32,
+    'codCom': np.uint32,
+    'codDP': np.uint32,
+    'codDistrElect': str,
+    'codMesa': str,
+    'CMUN': str,
+    'codPJ': np.uint32,
+    'CPRO': str,
+    'CSEC': str,
+    'datOfic': str,
+    'dniPersCand': str,
+    'elegidaPersCand': str,
+    'fecNacDiaPersCand': np.uint32,
+    'fecNacMesPersCand': np.uint32,
+    'fecNacYearPersCand': np.uint32,
+    'fechaDIA': np.uint32,
+    'fechaMES': np.uint32,
+    'fechaYEAR': np.uint32,
+    'horaApert': str,
+    'horaAvance1': str,
+    'horaAvance2': str,
+    'horaCierre': str,
+    'mesElec': np.uint32,
+    'nomAmbito': str,
+    'nomMunic': str,
+    'nomPersCand': str,
+    'nombreCand': str,
+    'numCandsObten': np.uint32,
+    'CDIS': str,
+    'numEscs': np.uint32,
+    'numMesas': np.uint32,
+    'numOrdenPersCand': np.uint32,
+    'numPersElegidas': np.uint32,
+    'numVuelta': np.uint32,
+    'pobDerecho': np.uint32,
+    'sexPersCand': str,
+    'siglaCand': str,
+    'tipoElec': np.uint32,
+    'tipoMunic': np.uint32,
+    'tipoPersCand': str,
+    'totVotCERE': np.uint32,
+    'votAvance1': np.uint32,
+    'votAvance2': np.uint32,
+    'votBlanco': np.uint32,
+    'votCand': np.uint32,
+    'votCands': np.uint32,
+    'votNO': np.uint32,
+    'votNulo': np.uint32,
+    'votPersCand': np.uint32,
+    'votSI': np.uint32,
+    'yearElec': np.uint32
 }
