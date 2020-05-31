@@ -277,3 +277,20 @@ aux=dfTVprov.apply(DHondt,axis=1,votos='partidos',numescs=('totales', 'carg'),vo
 
 
 ~~~
+
+~~~
+
+from seccCensales.seccCensales import seccionesCensales, secNIV
+cls2020=seccionesCensales.carga('/home/Datasets/Elec/SeccionesCensales/years/2020-SC-ag-ad.p.bz2')
+gdf2020=cls2020.gdf
+
+
+from electSpain.MinInt.fileZIP import readFileZIP
+res2019 = readFileZIP('/home/Datasets/Elec/Congreso/02201911_MESA.zip')
+
+
+prDatMesas=res2019['datosMesas']
+
+
+   
+~~~

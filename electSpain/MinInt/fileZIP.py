@@ -4,7 +4,7 @@ from io import StringIO
 
 from pandas import read_fwf
 
-from electSpain.MinInt.fileDescriptions import fieldDescriptions, tipoEleccion, tipoFichero, fieldTypes
+from electSpain.MinInt.fileDescriptions import fieldDescriptions, tipoEleccion, tipoFichero, fieldTypes, CPRO2CCA
 from utils.zipfiles import unzipfile
 
 minIntPattern = "(:?.*/)?(\d{2})(\d{2})(\d{2})(\d{2})\.DAT"
@@ -74,6 +74,37 @@ def readPandaFWF(ziphandle, filenameInfo, elType, fileType):
     return result
 
 
+buildCUs = {
+    'CUMUN': {'reqCols': ['nCPRO', 'nCMUN'], 'frmStr': "{nCPRO:02d}{nCMUN:03d}"},
+    'CUDIS': {'reqCols': ['nCPRO', 'nCMUN', 'nCDIS'], 'frmStr': "{nCPRO:02d}{nCMUN:03d}{nCDIS:02d}"},
+    'CUSEC': {'reqCols': ['nCPRO', 'nCMUN', 'nCDIS', 'nCSEC'], 'frmStr': "{nCPRO:02d}{nCMUN:03d}{nCDIS:02d}{nCSEC:03d}"}
+}
+
+
+def retocaColumnas(df):
+    col2numerize = ['CCA', 'CPRO', 'CMUN', 'CDIS', 'CSEC', ]
+    result = df
+
+    for c in result.columns:
+        if result[c].dtype == 'object':
+            result[c] = result[c].map(lambda x: x.strip()).astype("string")
+
+    if 'CPRO' in result and not 'CCA' in result:
+        result['CCA'] = result['CPRO'].map(CPRO2CCA).astype("string")
+
+    for c in col2numerize:
+        if c in result.columns:
+            newCOL = 'n' + c
+            result[newCOL] = result[c].astype('int32')
+
+    for newCU, cuSpecs in buildCUs.items():
+        if all([x in result.columns for x in cuSpecs['reqCols']]):
+            result[newCU] = result.apply(lambda x: cuSpecs['frmStr'].format(**{k: x[k] for k in cuSpecs['reqCols']}),
+                                         axis=1)
+            result['n' + newCU] = result[newCU].astype('int32')
+
+    return result
+
 
 def readFileZIP(filename):
     result = dict()
@@ -91,26 +122,27 @@ def readFileZIP(filename):
 
     if setInfo['adjuntaFich03']:
         aux = readPandaFWF(zh, files, elType, '03')
+        aux = retocaColumnas(aux)
         result['datosCandidatura'] = aux
 
     if setInfo['adjuntaFich04']:
         aux = readPandaFWF(zh, files, elType, '04')
-        print(aux.columns)
+        aux = retocaColumnas(aux)
         result['datosCandidatos'] = aux
 
     if setInfo['adjuntaFich05']:
         aux = readPandaFWF(zh, files, elType, '05')
-        print(aux.columns)
+        aux = retocaColumnas(aux)
         result['datosMunic'] = aux
 
     if setInfo['adjuntaFich06']:
         aux = readPandaFWF(zh, files, elType, '06')
-        print(aux.columns)
+        aux = retocaColumnas(aux)
         result['datosMunicResult'] = aux
 
     if setInfo['adjuntaFich07']:
         aux = readPandaFWF(zh, files, elType, '07')
-        print(aux.columns)
+        aux = retocaColumnas(aux)
         result['datosSupMunic'] = aux
 
     if setInfo['adjuntaFich08']:
@@ -120,43 +152,43 @@ def readFileZIP(filename):
 
     if setInfo['adjuntaFich09']:
         aux = readPandaFWF(zh, files, elType, '09')
-        print(aux.columns)
+        aux = retocaColumnas(aux)
         result['datosMesas'] = aux
 
     if setInfo['adjuntaFich10']:
         aux = readPandaFWF(zh, files, elType, '10')
-        print(aux.columns)
+        aux = retocaColumnas(aux)
         result['datosMesasResult'] = aux
 
     if setInfo['tipoElec'] == '04':
         if setInfo['adjuntaFich1104']:
             aux = readPandaFWF(zh, files, elType, '11')
-            print(aux.columns)
+            aux = retocaColumnas(aux)
             result['datosMunicPeq'] = aux
 
         if setInfo['adjuntaFich1204']:
             aux = readPandaFWF(zh, files, elType, '12')
-            print(aux.columns)
+            aux = retocaColumnas(aux)
             result['datosMunicPeqResult'] = aux
 
     if setInfo['adjuntaFich0510']:
         aux = readPandaFWF(zh, files, '10', '05')
-        print(aux.columns)
+        aux = retocaColumnas(aux)
         result['datosDipMunic'] = aux
 
     if setInfo['adjuntaFich0610']:
         aux = readPandaFWF(zh, files, '10', '06')
-        print(aux.columns)
+        aux = retocaColumnas(aux)
         result['datosDipMunicResult'] = aux
 
     if setInfo['adjuntaFich0710']:
         aux = readPandaFWF(zh, files, '10', '07')
-        print(aux.columns)
+        aux = retocaColumnas(aux)
         result['datosDipSupMunic'] = aux
 
     if setInfo['adjuntaFich0810']:
         aux = readPandaFWF(zh, files, '10', '08')
-        print(aux.columns)
+        aux = retocaColumnas(aux)
         result['datosDipSupMunicResult'] = aux
 
     # Elimina entradas que han dado problema con la carga
