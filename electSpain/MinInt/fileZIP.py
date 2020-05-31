@@ -74,6 +74,7 @@ def readPandaFWF(ziphandle, filenameInfo, elType, fileType):
     return result
 
 
+
 def readFileZIP(filename):
     result = dict()
 
@@ -89,47 +90,74 @@ def readFileZIP(filename):
         result['elecInfo'] = dict(readPandaFWF(zh, files, elType, '02').T[0])
 
     if setInfo['adjuntaFich03']:
-        result['datosCandidatura'] = readPandaFWF(zh, files, elType, '03')
+        aux = readPandaFWF(zh, files, elType, '03')
+        result['datosCandidatura'] = aux
 
     if setInfo['adjuntaFich04']:
-        result['datosCandidatos'] = readPandaFWF(zh, files, elType, '04')
+        aux = readPandaFWF(zh, files, elType, '04')
+        print(aux.columns)
+        result['datosCandidatos'] = aux
 
     if setInfo['adjuntaFich05']:
-        result['datosMunic'] = readPandaFWF(zh, files, elType, '05')
+        aux = readPandaFWF(zh, files, elType, '05')
+        print(aux.columns)
+        result['datosMunic'] = aux
 
     if setInfo['adjuntaFich06']:
-        result['datosMunicResult'] = readPandaFWF(zh, files, elType, '06')
+        aux = readPandaFWF(zh, files, elType, '06')
+        print(aux.columns)
+        result['datosMunicResult'] = aux
 
     if setInfo['adjuntaFich07']:
-        result['datosSupMunic'] = readPandaFWF(zh, files, elType, '07')
+        aux = readPandaFWF(zh, files, elType, '07')
+        print(aux.columns)
+        result['datosSupMunic'] = aux
 
     if setInfo['adjuntaFich08']:
-        result['datosSupMunicResult'] = readPandaFWF(zh, files, elType, '08')
+        aux = readPandaFWF(zh, files, elType, '08')
+        print(aux.columns)
+        result['datosSupMunicResult'] = aux
 
     if setInfo['adjuntaFich09']:
-        result['datosMesas'] = readPandaFWF(zh, files, elType, '09')
+        aux = readPandaFWF(zh, files, elType, '09')
+        print(aux.columns)
+        result['datosMesas'] = aux
 
     if setInfo['adjuntaFich10']:
-        result['datosMesasResult'] = readPandaFWF(zh, files, elType, '10')
+        aux = readPandaFWF(zh, files, elType, '10')
+        print(aux.columns)
+        result['datosMesasResult'] = aux
 
     if setInfo['tipoElec'] == '04':
         if setInfo['adjuntaFich1104']:
-            result['datosMunicPeq'] = readPandaFWF(zh, files, elType, '11')
+            aux = readPandaFWF(zh, files, elType, '11')
+            print(aux.columns)
+            result['datosMunicPeq'] = aux
 
         if setInfo['adjuntaFich1204']:
-            result['datosMunicPeqResult'] = readPandaFWF(zh, files, elType, '12')
+            aux = readPandaFWF(zh, files, elType, '12')
+            print(aux.columns)
+            result['datosMunicPeqResult'] = aux
 
     if setInfo['adjuntaFich0510']:
-        result['datosDipMunic'] = readPandaFWF(zh, files, '10', '05')
+        aux = readPandaFWF(zh, files, '10', '05')
+        print(aux.columns)
+        result['datosDipMunic'] = aux
 
     if setInfo['adjuntaFich0610']:
-        result['datosDipMunicResult'] = readPandaFWF(zh, files, '10', '06')
+        aux = readPandaFWF(zh, files, '10', '06')
+        print(aux.columns)
+        result['datosDipMunicResult'] = aux
 
     if setInfo['adjuntaFich0710']:
-        result['datosDipSupMunic'] = readPandaFWF(zh, files, '10', '07')
+        aux = readPandaFWF(zh, files, '10', '07')
+        print(aux.columns)
+        result['datosDipSupMunic'] = aux
 
     if setInfo['adjuntaFich0810']:
-        result['datosDipSupMunicResult'] = readPandaFWF(zh, files, '10', '08')
+        aux = readPandaFWF(zh, files, '10', '08')
+        print(aux.columns)
+        result['datosDipSupMunicResult'] = aux
 
     # Elimina entradas que han dado problema con la carga
     return {clave: result[clave] for clave in result if result[clave] is not None}
