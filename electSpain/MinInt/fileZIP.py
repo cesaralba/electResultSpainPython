@@ -147,7 +147,7 @@ def readFileZIP(filename):
 
     if setInfo['adjuntaFich08']:
         aux = readPandaFWF(zh, files, elType, '08')
-        print(aux.columns)
+        aux = retocaColumnas(aux)
         result['datosSupMunicResult'] = aux
 
     if setInfo['adjuntaFich09']:

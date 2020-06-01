@@ -1,4 +1,3 @@
-
 from collections import defaultdict
 
 import numpy as np
@@ -7,7 +6,7 @@ import pandas as pd
 colsControl = dict(votCand='votCands', numPersElegidas='numEscs')
 
 colsIDProc = ['tipoElec', 'yearElec', 'mesElec', 'numVuelta']
-colsIDEnt = ['CCA', 'CPRO', 'CMUN', 'CDIS', 'CSEC', 'codMesa']
+colsIDEnt = ['nCCA', 'nCPRO', 'nCMUN', 'nCDIS', 'nCSEC', 'codMesa']
 columnsIdent = colsIDProc + colsIDEnt
 col2remove = ['codDP', 'codCom']
 
@@ -60,14 +59,17 @@ def uniformizaIndices(dfdatos, dfresultados):
     nombresDatos = set(dfdatos.index.names)
     nombresResultados = set(dfresultados.index.names)
 
+    print(nombresDatos)
+    print(nombresResultados)
+
     nombresTotal = nombresDatos.union(nombresResultados)
     finalOrder = [x for x in columnsIdent if x in nombresTotal]
     faltanDatos = list(nombresTotal - nombresDatos)
     faltanResultados = list(nombresTotal - nombresResultados)
 
     if nombresDatos == nombresResultados:
-        return dfdatos.reorder_levels(order=finalOrder).sort_index(), \
-            dfresultados.reorder_levels(order=finalOrder).sort_index()
+        return dfdatos.reorder_levels(order=finalOrder).sort_index(), dfresultados.reorder_levels(
+            order=finalOrder).sort_index()
 
     if faltanDatos:
         auxResultados = dfresultados.reset_index(level=faltanDatos)
@@ -85,8 +87,8 @@ def uniformizaIndices(dfdatos, dfresultados):
     else:
         resultResultados = dfresultados
 
-    return resultDatos.reorder_levels(order=finalOrder).sort_index(), \
-        resultResultados.reorder_levels(order=finalOrder).sort_index()
+    return resultDatos.reorder_levels(order=finalOrder).sort_index(), resultResultados.reorder_levels(
+        order=finalOrder).sort_index()
 
 
 def aplanaResultados(reselect, columnaDato='votCand'):
@@ -171,34 +173,33 @@ def aplanaResultados(reselect, columnaDato='votCand'):
         clave = 'datosSupMunicResult'
         auxDF = result[clave]
 
-        result['provResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[99], level='CPRO')])
+        result['provResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[99], level='nCPRO')])
         result['autResult'] = recolocaTerrColumns(
-            auxDF[auxDF.index.isin(values=[99], level='CPRO') & ~ auxDF.index.isin(values=[99], level='CCA')])
-        result['totResult'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='CCA')])
+            auxDF[auxDF.index.isin(values=[99], level='nCPRO') & ~ auxDF.index.isin(values=[99], level='nCCA')])
+        result['totResult'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='nCCA')])
 
     if 'datosMunicResult' in result:
         clave = 'datosMunicResult'
         auxDF = result[clave]
 
-        result['municResult'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='CDIS')])
-        result['distrResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[99], level='CDIS')])
+        result['municResult'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='nCDIS')])
+        result['distrResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[99], level='nCDIS')])
 
     if 'datosMesasResult' in result:
         clave = 'datosMesasResult'
         auxDF = result[clave]
 
-        result['mesaResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[999], level='CMUN')])
-        result['totCERA'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='CCA')])
+        result['mesaResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[999], level='nCMUN')])
+        result['totCERA'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='nCCA')])
         result['autCERA'] = recolocaTerrColumns(
-            auxDF[auxDF.index.isin(values=[999], level='CMUN') & auxDF.index.isin(values=[99], level='CPRO')])
+            auxDF[auxDF.index.isin(values=[999], level='nCMUN') & auxDF.index.isin(values=[99], level='nCPRO')])
         result['provCERA'] = recolocaTerrColumns(
-            auxDF[auxDF.index.isin(values=[999], level='CMUN') & ~auxDF.index.isin(values=[99], level='CPRO')])
+            auxDF[auxDF.index.isin(values=[999], level='nCMUN') & ~auxDF.index.isin(values=[99], level='nCPRO')])
 
     return result
 
 
 def tipoClaveDatos(k, defaultvalue):
-
     iTerr = ['CCA', 'CPRO', 'codDistrElect', 'codPJ', 'CMUN', 'CDIS', 'CSEC', 'codMesa', 'nomAmbito',
              'nomMunic']
 
@@ -215,7 +216,7 @@ def recolocaTerrColumns(df):
     :return: dataframe nuevo con las columnas recolocadas
     """
 
-    iTerr = ['CCA', 'CPRO', 'codDistrElect', 'codPJ', 'CMUN', 'CDIS', 'CSEC', 'codMesa', 'nomAmbito',
+    iTerr = ['nCCA', 'nCPRO', 'codDistrElect', 'codPJ', 'nCMUN', 'nCDIS', 'nCSEC', 'codMesa', 'nomAmbito',
              'nomMunic']
 
     groupKeys = defaultdict(list)
@@ -263,11 +264,11 @@ def getExtraInfo(reselect):
     if 'datosSupMunic' in reselect:
         dfwrk = reselect['datosSupMunic']
         result['provData'] = dfwrk[dfwrk['CPRO'] != 99][['CPRO', 'nomAmbito']].rename({'nomAmbito': 'nomProv'},
-                                                                                            axis=1)
+                                                                                      axis=1)
         result['autData'] = dfwrk[(dfwrk['CPRO'] == 99) & (dfwrk['CCA'] != 99)][['CCA', 'nomAmbito']].rename(
             {'nomAmbito': 'nomAut'}, axis=1)
         result['totData'] = dfwrk[dfwrk['CCA'] == 99][['CCA', 'nomAmbito']].rename({'nomAmbito': 'nomTot'},
-                                                                                         axis=1)
+                                                                                   axis=1)
 
     return result
 
