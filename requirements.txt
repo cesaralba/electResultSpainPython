@@ -9,3 +9,5 @@ joblib
 babel
 scipy
 psutil
+pyyaml
+schema

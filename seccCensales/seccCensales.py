@@ -12,6 +12,8 @@ import psutil
 from scipy.sparse import dok_matrix
 
 from utils.zipfiles import fileOpener
+from utils.retocaDF import applyDFtransforms
+from .dfTransf import manipSecCensales
 
 secNIV = ['CCAA', 'PRO', 'MUN', 'DIS', 'SEC']
 # secNIV = ['CCAA', 'PRO']
@@ -51,7 +53,8 @@ def leeContornoSeccionesCensales(fname):
     logger.info("Loading SC file: %s", fname)
 
     baregdf = gpd.read_file(fname)
-    result = creaNumCols(baregdf, ['CCA', 'CPRO', 'CMUN', 'CDIS', 'CSEC', 'CUMUN', 'CUDIS', 'CUSEC'])
+    result = applyDFtransforms(baregdf, manipSecCensales)
+    #result = creaNumCols(baregdf, ['CCA', 'CPRO', 'CMUN', 'CDIS', 'CSEC', 'CUMUN', 'CUDIS', 'CUSEC'])
     result['numcell'] = 1  # Se usa para contar secciones para agrupación mayor
 
     timeOut = time()
@@ -80,13 +83,14 @@ def agrupaContornos(df, claveAgr, extraCols=None):
 
 def creaNumCols(df, cols):
     auxCols = cols if checkList(cols) else [cols]
-    result = df.reset_index()
 
     indexCol = None
     if isinstance(df.index, pd.core.indexes.base.Index):
         indexCol = df.index.name
     elif isinstance(df.index, pd.core.indexes.multi.MultiIndex):
         indexCol = df.index.names
+
+    result = df.reset_index()
 
     for c in auxCols:
         if c in result.columns:

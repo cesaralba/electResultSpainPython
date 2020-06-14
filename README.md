@@ -195,6 +195,11 @@ ultEscr= allDF.groupby('amb').tail(n=1)
 
 
 ~~~
+
+from seccCensales.seccCensales import seccionesCensales, secNIV
+cls2019 = seccionesCensales('/home/Datasets/Elec/SeccionesCensales/years/2019/SECC_CE_20190101.shp')
+
+
 from seccCensales.matrAdyacencia import leeContornoSeccionesCensales, agrupaContornos, creaNumCols, creaMatrizRec, preparaAgrupacionConts, secNIV, vecinos2DF, setDFLabels
 from itertools import product
 import numpy as np
@@ -275,5 +280,17 @@ dfTCprov=extraeNivel(dfTC,"CIRCUNSCRIPCIÓN ELECTORAL")
 
 aux=dfTVprov.apply(DHondt,axis=1,votos='partidos',numescs=('totales', 'carg'),votBlanco=('totales', 'votbla'),umbral=0.03,calculaCosteAsiento=True, calculaUltimoElecto=True,calculaVotosSinEsc=True,calculaCortadosUmbral=True) 
 
+
+~~~
+
+~~~
+from utils.retocaDF import readDFerrorFixFile, readDFtransformFile, applyDFtransforms, applyDFerrorFix
+
+scTransforms = readDFtransformFile('seccCensales/manipSecCensales.yml') 
+~~~
+
+~~~
+from seccCensales.seccCensales import seccionesCensales, secNIV 
+cls2011 = seccionesCensales('/home/Datasets/Elec/SeccionesCensales/years/2011/SECC_CE_20110101_03_R_INE.shp')
 
 ~~~
