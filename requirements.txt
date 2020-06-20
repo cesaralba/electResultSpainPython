@@ -10,4 +10,4 @@ babel
 scipy
 psutil
 pyyaml
-schema
+jsonschema
