@@ -1,30 +1,30 @@
 import pandas as pd
 import yaml
-from schema import Schema, Optional, Or
+from jsonschema import validate, Draft7Validator
 
-from .zipfiles import fileOpener
+from utils.zipfiles import fileOpener
+from .retocaDFschemas import errorFixSchema, transformDFschema, validatorDFschema
 
 SEPARATOR = "\n- "
 
-errorFixSchema = Schema([{'condition': {str: object}, 'fix': {str: object}}], ignore_extra_keys=True)
-transformDFschema = Schema(
-    [Or({'2numeric': {'cols': [str], Optional('prefix', default='n'): str}},
-        {'concat': {str: [str]}},
-        {str: object}  # Cosas que no sabemos qué son
-        )
-     ]
-)
 
+# TODO: Cambiar los print por logging
 
-def readFileAndValidateSchema(fname, schema=None):
+def readFileAndValidateSchema(fname, schema=None, semanticValidator=None, *args, **kwargs):
     with fileOpener(fname, "r") as handle:
         operations = yaml.safe_load(handle)
 
-    return operations if schema is not None else schema.validate(operations)
+    if schema is not None:
+        validate(operations, schema=schema, cls=Draft7Validator)
+
+    if semanticValidator is not None:
+        semanticValidator(operations, *args, **kwargs)
+
+    return operations
 
 
 def readDFerrorFixFile(fname, df=None):
-    operations = readFileAndValidateSchema(fname, errorFixSchema)
+    operations = readFileAndValidateSchema(fname, schema=errorFixSchema, semanticValidator=validateDFerrorFix, df=df)
 
     if df is not None:
         if not validateDFerrorFix(operations, df):
@@ -33,6 +33,9 @@ def readDFerrorFixFile(fname, df=None):
 
 
 def validateDFerrorFix(errorDataFix, df):
+    if df is None:
+        return False
+
     badRules = []
 
     for fix in errorDataFix:
@@ -45,15 +48,16 @@ def validateDFerrorFix(errorDataFix, df):
             badRules.append("errors on fix '%s'. Unknown columns: %s " % (fix, ",".join(sorted(unknownCols))))
             continue
     if badRules:
-        raise KeyError(f"validateDFerrorFix: error on fixes: \n - {SEPARATOR.join(badRules)}")
+        raise KeyError(f"validateDFerrorFix: error on fixes:{SEPARATOR}{SEPARATOR.join(badRules)}")
+
+    return True
 
 
-def applyDFerrorFix(df, errorDataFnane):
+def applyDFerrorFix(df, fixesList):
     try:
-        fixesList = readDFerrorFixFile(errorDataFnane)
         validateDFerrorFix(fixesList, df)
     except Exception as exc:
-        raise ValueError(f"applyDFerrorFix: incorrect fixes on {errorDataFnane}: {exc}")
+        raise ValueError(f"applyDFerrorFix: incorrect fixes: {exc}")
 
     def fixer(row, fields2fix):
         for col, value in fields2fix.items():
@@ -81,6 +85,9 @@ def readDFtransformFile(fname, df=None):
 
 
 def validateDFtransform(operations, df):
+    if df is None:
+        return False
+
     badOps = []
 
     currCols = set(df.columns.to_list())
@@ -135,11 +142,16 @@ def validateDFtransform(operations, df):
             print(f"validateDFtransform: operacion desconocida '{manip}': {op}")
 
     if badOps:
-        raise ValueError(f"validateDFtransform: Problems with some transforms:\n- {SEPARATOR.join(badOps)}")
+        raise ValueError(f"validateDFtransform: Problems with some transforms:{SEPARATOR}{SEPARATOR.join(badOps)}")
+
+    return True
 
 
 def applyDFtransforms(df, operations):
-    validateDFtransform(operations, df)
+    try:
+        validateDFtransform(operations, df)
+    except Exception as exc:
+        raise ValueError(f"applyDFtransforms: incorrect fixes: {exc}")
 
     for op in operations:
         manip, params = list(op.items())[0]
@@ -157,3 +169,75 @@ def applyDFtransforms(df, operations):
             print(f"applyDFtransforms: operación desconocida '{manip}': {op}")
 
     return df
+
+
+def readDFvalidatorFile(fname, df=None):
+    checks = readFileAndValidateSchema(fname, validatorDFschema)
+
+    if df is not None:
+        if not validateDFvalidator(checks, df):
+            raise ValueError(f"readDFvalidatorFile: incorrect validations on {fname}")
+    return checks
+
+
+def validateDFvalidator(checks, df):
+    badPairs = []
+
+    currCols = set(df.columns.to_list())
+
+    for pair in checks:
+        unknownCols = {col for col in pair if col not in currCols}
+
+        if unknownCols:
+            msg = f'Problem with validator {pair}. Unknown columns {sorted(unknownCols)}.'
+            badPairs.append(msg)
+
+    if badPairs:
+        raise ValueError(f"validateDFvalidator: Problems with some validators:{SEPARATOR}{SEPARATOR.join(badPairs)}")
+
+
+# TODO: Esto cambiará si se hacen más tipos de validaciones pero de momento tira así
+def passDFvalidators(df, checks, **kwargs):
+    try:
+        validateDFvalidator(checks, df)
+    except Exception as exc:
+        raise ValueError(f"passDFvalidators: incorrect checks: {exc}")
+
+    result = []
+    for c, n in checks:
+        soloC = df[c]
+        subCyN = df[[c, n]]
+
+        if soloC.nunique() == len(subCyN.drop_duplicates()):
+            continue
+
+        failedPair = {'pair': [c, n], 'combs': []}
+        pairCounts = df[[c, n]].drop_duplicates()[c].value_counts()
+        claveProblem = pairCounts[pairCounts > 1].reset_index()['index']
+        for cp in claveProblem:
+            comb2add = {'claveIDX':c,'claveVAL':n,'valorIDX':cp}
+            subconjunto = df[df[c] == cp]
+            valorCounts = subconjunto[n].value_counts()
+            nombresProb = valorCounts.to_dict()
+            comb2add['cuentas']=nombresProb
+
+            valorMax = valorCounts.max()
+
+            if valorMax != 1:
+                valorMayoritario = valorCounts[valorCounts == valorMax].index.tolist()
+                comb2add['valorMayoria']=valorMayoritario
+                subconjuntoDivergente = subconjunto[~(subconjunto[n].isin(  valorMayoritario))]
+                comb2add['divergentes'] = subconjuntoDivergente
+            else:
+                comb2add['divergentes'] = subconjunto
+
+            failedPair['combs'].append(comb2add)
+
+
+        result.append(failedPair)
+
+    return result
+
+
+def validatorResult2str(comps, df):
+    pass

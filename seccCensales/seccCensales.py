@@ -11,9 +11,9 @@ import pandas as pd
 import psutil
 from scipy.sparse import dok_matrix
 
+from utils.operations.retocaDF import applyDFtransforms
 from utils.zipfiles import fileOpener
-from utils.retocaDF import applyDFtransforms
-from .dfTransf import manipSecCensales
+from seccCensales.operations.dfTransf import manipSecCensales
 
 secNIV = ['CCAA', 'PRO', 'MUN', 'DIS', 'SEC']
 # secNIV = ['CCAA', 'PRO']
@@ -54,7 +54,7 @@ def leeContornoSeccionesCensales(fname):
 
     baregdf = gpd.read_file(fname)
     result = applyDFtransforms(baregdf, manipSecCensales)
-    #result = creaNumCols(baregdf, ['CCA', 'CPRO', 'CMUN', 'CDIS', 'CSEC', 'CUMUN', 'CUDIS', 'CUSEC'])
+    # result = creaNumCols(baregdf, ['CCA', 'CPRO', 'CMUN', 'CDIS', 'CSEC', 'CUMUN', 'CUDIS', 'CUSEC'])
     result['numcell'] = 1  # Se usa para contar secciones para agrupación mayor
 
     timeOut = time()
