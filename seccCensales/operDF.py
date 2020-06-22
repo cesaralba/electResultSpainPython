@@ -6,10 +6,11 @@ manipSecCensales = [{'2numeric': {'prefix': 'n',
                      }
                     ]
 
-validaciones = [['CCA', 'NCA'], ['CCA', 'CNUT0'], ['CCA', 'NUT1'], ['CCA', 'NUT2'],
+validaciones = [['CCA', 'NCA'], ['CCA', 'CNUT0'], ['CCA', 'NUT1'], ['CCA', 'NUT2'], ['CCA', 'CNUT1'], ['CCA', 'CNUT2'],
 
                 ['CPRO', 'NPRO'], ['CPRO', 'NCA'], ['NPRO', 'NCA'], ['CPRO', 'CNUT0'], ['CPRO', 'NUT1'],
-                ['CPRO', 'NUT2'], ['NUT3', 'CPRO'], ['NUT3', 'NPRO'],
+                ['CPRO', 'NUT2'], ['NUT3', 'CPRO'], ['NUT3', 'NPRO'], ['CPRO', 'CNUT1'],
+               ['CPRO', 'CNUT2'],
 
                 ['CUMUN', 'NMUN'], ['CUMUN', 'CMUN'], ['CUMUN', 'NCA'], ['CUMUN', 'NPRO'], ['CUMUN', 'NMUN'],
 
