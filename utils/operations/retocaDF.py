@@ -34,6 +34,7 @@ def readDFerrorFixFile(fname, df=None):
 
 
 def validateDFerrorFix(errorDataFix, df):
+    validate(errorDataFix, schema=errorFixSchema, cls=Draft7Validator)
     if df is None:
         return False
 
@@ -85,6 +86,8 @@ def readDFtransformFile(fname, df=None):
 
 
 def validateDFtransform(operations, df):
+    validate(operations, schema=transformDFschema, cls=Draft7Validator)
+
     if df is None:
         return False
 
@@ -193,6 +196,8 @@ def readDFvalidatorFile(fname, df=None):
 
 
 def validateDFvalidator(checks, df):
+    validate(checks, schema=validatorDFschema, cls=Draft7Validator)
+
     badPairs = []
 
     for pair in checks:

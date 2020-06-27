@@ -3,7 +3,7 @@ manipSecCensales = [{'2numeric': {'prefix': 'n',
                     {'concat': {'NUT1': ['CNUT0', 'CNUT1'],
                                 'NUT2': ['CNUT0', 'CNUT1', 'CNUT2'],
                                 'NUT3': ['CNUT0', 'CNUT1', 'CNUT2', 'CNUT3']}
-                     },
+                     }
                     ]
 
 validaciones = [['CCA', 'NCA'], ['CCA', 'CNUT0'], ['CCA', 'NUT1'], ['CCA', 'NUT2'], ['CCA', 'CNUT1'], ['CCA', 'CNUT2'],

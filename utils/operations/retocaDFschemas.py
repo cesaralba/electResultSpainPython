@@ -36,9 +36,9 @@ transformDFschema = {
                     "minItems": 1},
 
         "concatTrfParam": {'type': 'object', 'properties': {regexColName: {"$ref": "#/definitions/colList"}}},
-        "concatTrfOp": {'type': 'object', 'properties': {"concat": {"$ref": "#/definitions/concatTrfParam"}}},
+        "concatTrfOp": {'type': 'object', 'properties': {"concat": {"$ref": "#/definitions/concatTrfParam"}},
+                        "additionalProperties": False},
 
-        "monocolTrfOpName": {"type": "string", "enum": ["2numeric", "upper", "lower"]},
         "monocolTrfParam": {'type': 'object',
                             'properties': {'prefix': {"type": "string", "minLength": 1, "pattern": regexColName},
                                            'cols': {"$ref": "#/definitions/colList"},
@@ -46,8 +46,13 @@ transformDFschema = {
                             "required": ["cols"]
                             },
         "monocolTrfOp": {'type': 'object',
-                         'propertyNames': {"$ref": "#/definitions/monocolTrfOpName"},
-                         'properties': {"$ref": "#/definitions/monocolTrfParam"},
+                         'properties': {"2numeric": {"$ref": "#/definitions/monocolTrfParam"},
+                                        "upper": {"$ref": "#/definitions/monocolTrfParam"},
+                                        "lower": {"$ref": "#/definitions/monocolTrfParam"}
+                                        },
+                         'maxProperties': 1,
+                         'minProperties': 1,
+                         "additionalProperties": False
                          },
 
         "dfOps": {
