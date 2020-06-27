@@ -2,6 +2,7 @@
 # https://json-schema.org/specification.html
 # https://json-schema.org/understanding-json-schema/index.html
 
+# TODO: UNITARIOS!
 
 regexColName = r"^[_a-zA-Z0-9]+$"
 typeNumberOrValue = {"anyOf": [{"type": "string"}, {"type": "number"}]}
@@ -29,28 +30,31 @@ transformDFschema = {
 
     "definitions": {
         "colName": typeColName,
-        "v2numericTrf": {'type': 'object',
-                         'properties': {'prefix': {"type": "string", "minLength": 1, "pattern": regexColName},
-                                        'cols': {"type": "array",
-                                                 "items": {
-                                                     "$ref": "#/definitions/colName"},
-                                                 "minItems": 1}
-                                        },
-                         "required": ["cols"]
+        "colList": {"type": "array",
+                    "items": {
+                        "$ref": "#/definitions/colName"},
+                    "minItems": 1},
+
+        "concatTrfParam": {'type': 'object', 'properties': {regexColName: {"$ref": "#/definitions/colList"}}},
+        "concatTrfOp": {'type': 'object', 'properties': {"concat": {"$ref": "#/definitions/concatTrfParam"}}},
+
+        "monocolTrfOpName": {"type": "string", "enum": ["2numeric", "upper", "lower"]},
+        "monocolTrfParam": {'type': 'object',
+                            'properties': {'prefix': {"type": "string", "minLength": 1, "pattern": regexColName},
+                                           'cols': {"$ref": "#/definitions/colList"},
+                                           },
+                            "required": ["cols"]
+                            },
+        "monocolTrfOp": {'type': 'object',
+                         'propertyNames': {"$ref": "#/definitions/monocolTrfOpName"},
+                         'properties': {"$ref": "#/definitions/monocolTrfParam"},
                          },
 
-        "concatTrf": {'type': 'object', 'properties': {regexColName: {"type": "array",
-                                                                      "items": {
-                                                                          "$ref": "#/definitions/colName"},
-                                                                      "minItems": 1}}},
-        "dfOps": {"type": "object",
-                  "properties": {
-                      "2numeric": {"$ref": "#/definitions/v2numericTrf"},
-                      "concat": {"$ref": "#/definitions/concatTrf"},
-                  },
-                  "maxProperties": 1,
-                  "additionalProperties": True
-                  }
+        "dfOps": {
+            "oneOf": [{"$ref": "#/definitions/concatTrfOp"},
+                      {"$ref": "#/definitions/monocolTrfOp"}
+                      ]
+        }
     },
     "items": {"$ref": "#/definitions/dfOps"},
     "minItems": 1
