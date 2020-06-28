@@ -2,7 +2,7 @@ from collections import defaultdict
 
 import geopandas as gpd
 
-from seccCensales.operDF import validaciones, manipSecCensales
+from .operDFparaINE import validacionesINE, manipSecCensalesINE
 from utils.operations.retocaDF import applyDFtransforms, passDFvalidators
 
 
@@ -20,10 +20,10 @@ def validaSeccionesCensalesINE(scDict):
 
     for y, fname in scDict.items():
         auxDF = gpd.read_file(fname)
-        trfDF = applyDFtransforms(auxDF, manipSecCensales)
+        trfDF = applyDFtransforms(auxDF, manipSecCensalesINE)
 
         result[y]['df'] = trfDF
-        result[y]['checks'] = passDFvalidators(trfDF, validaciones)
+        result[y]['checks'] = passDFvalidators(trfDF, validacionesINE)
         result[y]['cadChecks'] = checks2str(result[y]['checks'], 'CUSEC')
 
     return result
