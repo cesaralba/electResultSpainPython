@@ -6,16 +6,14 @@ manipSecCensales = [{'2numeric': {'prefix': 'n',
                      }
                     ]
 
-validaciones = [['CCA', 'NCA'], ['CCA', 'CNUT0'], ['CCA', 'NUT1'], ['CCA', 'NUT2'], ['CCA', 'CNUT1'], ['CCA', 'CNUT2'],
+validacionesSecCensales = [['CCA', 'NCA'], ['CCA', 'CNUT0'],
 
-                ['CPRO', 'NPRO'], ['CPRO', 'NCA'], ['NPRO', 'NCA'], ['CPRO', 'CNUT0'], ['CPRO', 'NUT1'],
-                ['CPRO', 'NUT2'], ['NUT3', 'CPRO'], ['NUT3', 'NPRO'], ['CPRO', 'CNUT1'],
-                ['CPRO', 'CNUT2'],
+                           ['CPRO', 'NPRO'], ['CPRO', 'NCA'], ['NPRO', 'NCA'], ['CPRO', 'CNUT0'],['CPRO', 'CNUT1'], ['CPRO', 'CNUT2'],
 
-                ['CUMUN', 'NMUN'], ['CUMUN', 'CMUN'], ['CUMUN', 'NCA'], ['CUMUN', 'NPRO'], ['CUMUN', 'NMUN'],
+                           ['CUMUN', 'NMUN'], ['CUMUN', 'CMUN'], ['CUMUN', 'NCA'], ['CUMUN', 'NPRO'], ['CUMUN', 'NMUN'],
 
-                ['CUDIS', 'CDIS'], ['CUDIS', 'NMUN'], ['CUDIS', 'CMUN'], ['CUDIS', 'NCA'], ['CUDIS', 'NPRO'],
-                ['CUDIS', 'NMUN'],
+                           ['CUDIS', 'CDIS'], ['CUDIS', 'NMUN'], ['CUDIS', 'CMUN'], ['CUDIS', 'NCA'], ['CUDIS', 'NPRO'],
+                           ['CUDIS', 'NMUN'],
 
-                ['CUSEC', 'CSEC'],
-                ]
+                           ['CUSEC', 'CSEC'],
+                           ]

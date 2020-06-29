@@ -11,9 +11,12 @@ import pandas as pd
 import psutil
 from scipy.sparse import dok_matrix
 
-from utils.operations.retocaDF import applyDFtransforms
+from utils.operations.retocaDF import applyDFtransforms, passDFvalidators, applyDFerrorFix
 from utils.zipfiles import fileOpener
-from seccCensales.operations.dfTransf import manipSecCensales
+from seccCensales.operDF import manipSecCensales, validacionesSecCensales
+from seccCensales.fixINE import fixesINE
+
+#Fuente de datos: 
 
 secNIV = ['CCAA', 'PRO', 'MUN', 'DIS', 'SEC']
 # secNIV = ['CCAA', 'PRO']
@@ -53,7 +56,18 @@ def leeContornoSeccionesCensales(fname):
     logger.info("Loading SC file: %s", fname)
 
     baregdf = gpd.read_file(fname)
-    result = applyDFtransforms(baregdf, manipSecCensales)
+
+    primPass = passDFvalidators(baregdf,validacionesSecCensales)
+    if primPass:
+        logger.error(f"Fichero: {fname}. Errores detectados. Aplicando arreglos.{primPass}")
+        fixedDF = applyDFerrorFix(baregdf, fixesINE)
+        segPass = passDFvalidators(baregdf,validacionesSecCensales)
+        if segPass:
+            logger.error(f"Fichero: {fname}. Errores detectados {segPass}")
+            raise ValueError(f"Problemas en fichero {fname}")
+    else:
+        fixedDF = baregdf
+    result = applyDFtransforms(fixedDF, manipSecCensales)
     # result = creaNumCols(baregdf, ['CCA', 'CPRO', 'CMUN', 'CDIS', 'CSEC', 'CUMUN', 'CUDIS', 'CUSEC'])
     result['numcell'] = 1  # Se usa para contar secciones para agrupación mayor
 
@@ -253,7 +267,7 @@ class seccionesCensales(object):
     def lazyLoad(self, permisivo=False):
         if self.gdf is None:
             self.gdf = leeContornoSeccionesCensales(self.fname)
-            self.controlCalidad(permisivo)
+            # self.controlCalidad(permisivo)
 
         return self.gdf
 
