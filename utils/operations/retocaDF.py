@@ -60,8 +60,8 @@ def applyDFerrorFix(df, fixesList):
     except Exception as exc:
         raise ValueError(f"applyDFerrorFix: incorrect fixes: {exc}")
 
-    def fixer(row, fields2fix):
-        for col, value in fields2fix.items():
+    def fixer(row, fix):
+        for col, value in fix.items():
             row[col] = value
         return row
 
@@ -71,7 +71,10 @@ def applyDFerrorFix(df, fixesList):
         fields2fix = rule['fix']
         filter = pd.Series(condition)
         condList = (df[list(condition)] == filter).all(axis=1)
-        df[condList] = df[condList].apply(lambda x: fixer(x, fields2fix), axis=1)
+
+        if df[condList].shape[0] > 0:
+            print(f"Condition: {condition} -> Fix: {fields2fix}. Applied to {df[condList].shape[0]} row(s)")
+            df[condList] = df[condList].apply(lambda x: fixer(x, fields2fix), axis=1)
 
     return df
 
