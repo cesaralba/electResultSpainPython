@@ -67,13 +67,13 @@ def applyDFerrorFix(df, fixesList):
     for rule in fixesList:
         # https://stackoverflow.com/a/34162576
         condition = rule['condition']
-        fields2fix = rule['fix']
+        Xfields2fix = rule['fix']
         filterCond = pd.Series(condition)
         condList = (df[list(condition)] == filterCond).all(axis=1)
 
         if df[condList].shape[0] > 0:
             print(f"Condition: {condition} -> Fix: {fields2fix}. Applied to {df[condList].shape[0]} row(s)")
-            df[condList] = df[condList].apply(lambda x: fixer(x, fields2fix), axis=1)
+            df[condList] = df[condList].apply(lambda x,fields2fix=rule['fix']: fixer(x, fields2fix), axis=1)
 
     return df
 
