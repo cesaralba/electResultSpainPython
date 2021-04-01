@@ -16,7 +16,7 @@ from utils.zipfiles import fileOpener
 from seccCensales.operDF import manipSecCensales, validacionesSecCensales
 from seccCensales.fixINE import fixesINE
 
-#Fuente de datos: 
+#Fuente de datos:
 
 secNIV = ['CCAA', 'PRO', 'MUN', 'DIS', 'SEC']
 # secNIV = ['CCAA', 'PRO']
@@ -252,7 +252,7 @@ def creaMatrizRecJL(seccCensales, listaNiv, JLconfig=None):
     return resDF
 
 
-class seccionesCensales(object):
+class SeccionesCensales(object):
     def __init__(self, fname, niveles=secNIV):
         self.fname = fname
         auxClaveNiveles = [k for k in resultBase if k in niveles]
@@ -459,7 +459,7 @@ if __name__ == "__main__":
 
     nivelesReq = procesaArgNiveles(args.niveles)
 
-    clsSC = seccionesCensales(fname=args.infile, niveles=nivelesReq)
+    clsSC = SeccionesCensales(fname=args.infile, niveles=nivelesReq)
 
     if args.adyacencia:
         clsSC.calculaMatrizAdyacencia(args.permisivo, JLconfig=procesaArgsJobLib(args))
