@@ -11,3 +11,4 @@ scipy
 psutil
 pyyaml
 jsonschema
+pygeos
