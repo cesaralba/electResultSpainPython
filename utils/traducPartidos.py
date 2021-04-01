@@ -103,6 +103,7 @@ class agrupaTraduccionesFB(object):
         """
 
         while self.estado < (self.numcont) ** (self.lenClases + 1):
+            dests = {}
             flag = True
             while flag:
                 if self.estado >= (self.numcont) ** (self.lenClases + 1):
