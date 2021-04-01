@@ -180,7 +180,7 @@ def applyDFtransforms(df, operations):
 
         elif manip == 'concat':
             for newCol, cols2add in params.items():
-                nameMerger = lambda x: "".join([x[label] for label in cols2add])
+                nameMerger = lambda x,colList=cols2add: "".join([x[label] for label in colList])
                 df[newCol] = df.apply(nameMerger, axis=1)
         else:
             print(f"applyDFtransforms: operación desconocida '{manip}': {op}")
