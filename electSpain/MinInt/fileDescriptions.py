@@ -52,251 +52,387 @@ codAut2nombre = {
     '19': 'Melilla'
 }
 
+CPRO2CCA = {
+    '01': '14',
+    '02': '07',
+    '03': '17',
+    '04': '01',
+    '05': '08',
+    '06': '10',
+    '07': '04',
+    '08': '09',
+    '09': '08',
+    '10': '10',
+    '11': '01',
+    '12': '17',
+    '13': '07',
+    '14': '01',
+    '15': '11',
+    '16': '07',
+    '17': '09',
+    '18': '01',
+    '19': '07',
+    '20': '14',
+    '21': '01',
+    '22': '02',
+    '23': '01',
+    '24': '08',
+    '25': '09',
+    '26': '16',
+    '27': '11',
+    '28': '12',
+    '29': '01',
+    '30': '15',
+    '31': '13',
+    '32': '11',
+    '33': '03',
+    '34': '08',
+    '35': '05',
+    '36': '11',
+    '37': '08',
+    '38': '05',
+    '39': '06',
+    '40': '08',
+    '41': '01',
+    '42': '08',
+    '43': '09',
+    '44': '02',
+    '45': '07',
+    '46': '17',
+    '47': '08',
+    '48': '14',
+    '49': '08',
+    '50': '02',
+    '51': '18',
+    '52': '19'
+}
+
 fieldDescriptions = {
     # 1.- Fichero de CONTROL de los ficheros que componen el proceso electoral
     '01': [
-        (2, "tipoElec", np.uint32),
-        (4, "yearElec", np.uint32),
-        (2, "mesElec", np.uint32),
-        (1, "numVuelta", np.uint32),
-        (1, "adjuntaFich01", np.uint32),  # Siempre 1
-        (1, "adjuntaFich02", np.uint32),  # 1/0 (se adjunta/no se adjunta el fichero
-        (1, "adjuntaFich03", np.uint32),  # 1/0 (se adjunta/no se adjunta el fichero
-        (1, "adjuntaFich04", np.uint32),  # 1/0 (se adjunta/no se adjunta el fichero
-        (1, "adjuntaFich05", np.uint32),  # 1/0 (se adjunta/no se adjunta el fichero
-        (1, "adjuntaFich06", np.uint32),  # 1/0 (se adjunta/no se adjunta el fichero
-        (1, "adjuntaFich07", np.uint32),  # 1/0 (se adjunta/no se adjunta el fichero
-        (1, "adjuntaFich08", np.uint32),  # 1/0 (se adjunta/no se adjunta el fichero
-        (1, "adjuntaFich09", np.uint32),  # 1/0 (se adjunta/no se adjunta el fichero
-        (1, "adjuntaFich10", np.uint32),  # 1/0 (se adjunta/no se adjunta el fichero
-        (1, "adjuntaFich1104", np.uint32),  # 1/0 (se adjunta/no se adjunta el fichero
-        (1, "adjuntaFich1204", np.uint32),  # 1/0 (se adjunta/no se adjunta el fichero
-        (1, "adjuntaFich0510", np.uint32),  # 1/0 (se adjunta/no se adjunta el fichero
-        (1, "adjuntaFich0610", np.uint32),  # 1/0 (se adjunta/no se adjunta el fichero
-        (1, "adjuntaFich0710", np.uint32),  # 1/0 (se adjunta/no se adjunta el fichero
-        (1, "adjuntaFich0810", np.uint32)  # 1/0 (se adjunta/no se adjunta el fichero
+        (2, "tipoElec"),
+        (4, "yearElec"),
+        (2, "mesElec"),
+        (1, "numVuelta"),
+        (1, "adjuntaFich01"),  # Siempre 1
+        (1, "adjuntaFich02"),  # 1/0 (se adjunta/no se adjunta el fichero
+        (1, "adjuntaFich03"),  # 1/0 (se adjunta/no se adjunta el fichero
+        (1, "adjuntaFich04"),  # 1/0 (se adjunta/no se adjunta el fichero
+        (1, "adjuntaFich05"),  # 1/0 (se adjunta/no se adjunta el fichero
+        (1, "adjuntaFich06"),  # 1/0 (se adjunta/no se adjunta el fichero
+        (1, "adjuntaFich07"),  # 1/0 (se adjunta/no se adjunta el fichero
+        (1, "adjuntaFich08"),  # 1/0 (se adjunta/no se adjunta el fichero
+        (1, "adjuntaFich09"),  # 1/0 (se adjunta/no se adjunta el fichero
+        (1, "adjuntaFich10"),  # 1/0 (se adjunta/no se adjunta el fichero
+        (1, "adjuntaFich1104"),  # 1/0 (se adjunta/no se adjunta el fichero
+        (1, "adjuntaFich1204"),  # 1/0 (se adjunta/no se adjunta el fichero
+        (1, "adjuntaFich0510"),  # 1/0 (se adjunta/no se adjunta el fichero
+        (1, "adjuntaFich0610"),  # 1/0 (se adjunta/no se adjunta el fichero
+        (1, "adjuntaFich0710"),  # 1/0 (se adjunta/no se adjunta el fichero
+        (1, "adjuntaFich0810")  # 1/0 (se adjunta/no se adjunta el fichero
     ],
     # 2.- Fichero de IDENTIFICACION del proceso electoral
     '02': [
-        (2, "tipoElec", np.uint32),
-        (4, "yearElec", np.uint32),
-        (2, "mesElec", np.uint32),
-        (1, "numVuelta", np.uint32),  # (en procesos a una sola vuelta o Referéndum = 1)
-        (1, "ambito", str),  # (N=nacional, A=autonómico)
-        (2, "codAmbito", np.uint32),  # del proceso electoral
-        (2, "fechaDIA", np.uint32),
-        (2, "fechaMES", np.uint32),
-        (4, "fechaYEAR", np.uint32),
-        (5, "horaApert", str),  # (en formato ‘HH:MM’ de 24 horas)
-        (5, "horaCierre", str),  # (en formato ‘HH:MM’ de 24 horas)
-        (5, "horaAvance1", str),  # (en formato ‘HH:MM’ de 24 horas)
-        (5, "horaAvance2", str)  # (en formato ‘HH:MM’ de 24 horas)
+        (2, "tipoElec"),
+        (4, "yearElec"),
+        (2, "mesElec"),
+        (1, "numVuelta"),  # (en procesos a una sola vuelta o Referéndum = 1)
+        (1, "ambito"),  # (N=nacional, A=autonómico)
+        (2, "codAmbito"),  # del proceso electoral
+        (2, "fechaDIA"),
+        (2, "fechaMES"),
+        (4, "fechaYEAR"),
+        (5, "horaApert"),  # (en formato ‘HH:MM’ de 24 horas)
+        (5, "horaCierre"),  # (en formato ‘HH:MM’ de 24 horas)
+        (5, "horaAvance1"),  # (en formato ‘HH:MM’ de 24 horas)
+        (5, "horaAvance2")  # (en formato ‘HH:MM’ de 24 horas)
     ],
     # 3.- Fichero de CANDIDATURAS
     '03': [
-        (2, "tipoElec", np.uint32),
-        (4, "yearElec", np.uint32),
-        (2, "mesElec", np.uint32),
-        (6, "codCand", np.uint32),
-        (50, "siglaCand", str),
-        (150, "nombreCand", str),
-        (6, "codCandAcumProv", np.uint32),
-        (6, "codCandAcumAut", np.uint32),
-        (6, "codCandAcumNac", np.uint32)
+        (2, "tipoElec"),
+        (4, "yearElec"),
+        (2, "mesElec"),
+        (6, "codCand"),
+        (50, "siglaCand"),
+        (150, "nombreCand"),
+        (6, "codCandAcumProv"),
+        (6, "codCandAcumAut"),
+        (6, "codCandAcumNac")
     ],
     # 4.- Fichero de RELACION DE CANDIDATOS
     '04': [
-        (2, "tipoElec", np.uint32),
-        (4, "yearElec", np.uint32),
-        (2, "mesElec", np.uint32),
-        (1, "numVuelta", np.uint32),
-        (2, "codProv", np.uint32),  # (99 en elecciones al Parlamento Europeo)
-        (1, "codDistr", np.uint32),  # Distrito electoral 9 en elecciones que no tienen este tipo de circunscripción
-        (3, "codMunic", np.uint32),  # (elecciones municipales) o del Senador (Senado). En el resto de procesos 999
-        (6, "codCand", np.uint32),
-        (3, "numOrdenPersCand", np.uint32),
-        (1, "tipoPersCand", str),  # (T = Titular, " S = Suplente)
-        (25, "nomPersCand", str),
-        (25, "ape1PersCand", str),
-        (25, "ape2PersCand", str),
-        (1, "sexPersCand", str),  # (Masculino/Femenino)
-        (2, "fecNacDiaPersCand", np.uint32),
-        (2, "fecNacMesPersCand", np.uint32),
-        (4, "fecNacYearPersCand", np.uint32),
-        (10, "dniPersCand", str),
-        (1, "elegidaPersCand", str)  # (S/N)
+        (2, "tipoElec"),
+        (4, "yearElec"),
+        (2, "mesElec"),
+        (1, "numVuelta"),
+        (2, "CPRO"),  # (99 en elecciones al Parlamento Europeo)
+        (1, "codDistrElect"),  # Distrito electoral 9 en elecciones que no tienen este tipo de circunscripción
+        (3, "CMUN"),  # (elecciones municipales) o del Senador (Senado). En el resto de procesos 999
+        (6, "codCand"),
+        (3, "numOrdenPersCand"),
+        (1, "tipoPersCand"),  # (T = Titular, " S = Suplente)
+        (25, "nomPersCand"),
+        (25, "ape1PersCand"),
+        (25, "ape2PersCand"),
+        (1, "sexPersCand"),  # (Masculino/Femenino)
+        (2, "fecNacDiaPersCand"),
+        (2, "fecNacMesPersCand"),
+        (4, "fecNacYearPersCand"),
+        (10, "dniPersCand"),
+        (1, "elegidaPersCand")  # (S/N)
     ],
     # 5.- Fichero de DATOS COMUNES DE MUNICIPIOS
     '05': [
-        (2, "tipoElec", np.uint32),
-        (4, "yearElec", np.uint32),
-        (2, "mesElec", np.uint32),
-        (1, "numVuelta", np.uint32),
-        (2, "codAut", np.uint32),
-        (2, "codProv", np.uint32),
-        (3, "codMunic", np.uint32),
-        (2, "numDistr", np.uint32),  # Distrito municipal 99 si es el total municipal
-        (100, "nomMunic", str),  # o del distrito municipal
-        (1, "codDistr", np.uint32),  # Distrito electoral 0 en elecciones que no tienen este tipo de circunscripción
-        (3, "codPJ", np.uint32),
-        (3, "codDP", np.uint32),
-        (3, "codCom", np.uint32),  # Comarca
-        (8, "pobDerecho", np.uint32),
-        (5, "numMesas", np.uint32),
-        (8, "censINE", np.uint32),
-        (8, "censEscr", np.uint32),
-        (8, "censCEREescr", np.uint32),  # (Residentes Extranjeros)
-        (8, "totVotCERE", np.uint32),
-        (8, "votAvance1", np.uint32),
-        (8, "votAvance2", np.uint32),
-        (8, "votBlanco", np.uint32),
-        (8, "votNulo", np.uint32),
-        (8, "votCands", np.uint32),
-        (3, "numEscs", np.uint32),  # cuando el municipio es la circunscripción electoral. Ceros en otros casos
-        (8, "votSI", np.uint32),  # o ceros en otros procesos electorales
-        (8, "votNO", np.uint32),  # o ceros en otros procesos electorales
-        (1, "datOfic", str)  # (S/N)
+        (2, "tipoElec"),
+        (4, "yearElec"),
+        (2, "mesElec"),
+        (1, "numVuelta"),
+        (2, "CCA"),
+        (2, "CPRO"),
+        (3, "CMUN"),
+        (2, "CDIS"),  # Distrito municipal 99 si es el total municipal
+        (100, "nomMunic"),  # o del distrito municipal
+        (1, "codDistrElect"),  # Distrito electoral 0 en elecciones que no tienen este tipo de circunscripción
+        (3, "codPJ"),
+        (3, "codDP"),
+        (3, "codCom"),  # Comarca
+        (8, "pobDerecho"),
+        (5, "numMesas"),
+        (8, "censINE"),
+        (8, "censEscr"),
+        (8, "censCEREescr"),  # (Residentes Extranjeros)
+        (8, "totVotCERE"),
+        (8, "votAvance1"),
+        (8, "votAvance2"),
+        (8, "votBlanco"),
+        (8, "votNulo"),
+        (8, "votCands"),
+        (3, "numEscs"),  # cuando el municipio es la circunscripción electoral. Ceros en otros casos
+        (8, "votSI"),  # o ceros en otros procesos electorales
+        (8, "votNO"),  # o ceros en otros procesos electorales
+        (1, "datOfic")  # (S/N)
     ],
     # 6.- Fichero de DATOS DE CANDIDATURAS DE MUNICIPIOS
     '06': [
-        (2, "tipoElec", np.uint32),
-        (4, "yearElec", np.uint32),
-        (2, "mesElec", np.uint32),
-        (1, "numVuelta", np.uint32),
-        (2, "codProv", np.uint32),
-        (3, "codMunic", np.uint32),
-        (2, "numDistr", np.uint32),  # Distrito municipal 99 si es el total municipal
-        (6, "codCand", np.uint32),
-        (8, "votCand", np.uint32),
-        (3, "numPersElegidas", np.uint32)
+        (2, "tipoElec"),
+        (4, "yearElec"),
+        (2, "mesElec"),
+        (1, "numVuelta"),
+        (2, "CPRO"),
+        (3, "CMUN"),
+        (2, "CDIS"),  # Distrito municipal 99 si es el total municipal
+        (6, "codCand"),
+        (8, "votCand"),
+        (3, "numPersElegidas")
     ],
     # 7.- Fichero de DATOS COMUNES DE AMBITO SUPERIOR AL MUNICIPIO
     '07': [
-        (2, "tipoElec", np.uint32),
-        (4, "yearElec", np.uint32),
-        (2, "mesElec", np.uint32),
-        (1, "numVuelta", np.uint32),
-        (2, "codAut", np.uint32),  # En el caso de Total Nacional, llevará 99
-        (2, "codProv", np.uint32),  # 99 si se trata de datos a nivel Total Comunidad o Total Nacional
-        (1, "codDistr", np.uint32),  # Distrito electoral 9 en datos a nivel Total Provincial, Comunidad o Nacional
-        (50, "nomAmbito", str),
-        (8, "pobDerecho", np.uint32),
-        (5, "numMesas", np.uint32),
-        (8, "censINE", np.uint32),
-        (8, "censEscr", np.uint32),
-        (8, "censCEREescr", np.uint32),  # (Residentes Extranjeros)
-        (8, "totVotCERE", np.uint32),
-        (8, "votAvance1", np.uint32),
-        (8, "votAvance2", np.uint32),
-        (8, "votBlanco", np.uint32),
-        (8, "votNulo", np.uint32),
-        (8, "votCands", np.uint32),
-        (6, "numEscs", np.uint32),  # cuando el municipio es la circunscripción electoral. Ceros en otros casos
-        (8, "votSI", np.uint32),  # o ceros en otros procesos electorales
-        (8, "votNO", np.uint32),  # o ceros en otros procesos electorales
-        (1, "datOfic", str)  # (S/N)
+        (2, "tipoElec"),
+        (4, "yearElec"),
+        (2, "mesElec"),
+        (1, "numVuelta"),
+        (2, "CCA"),  # En el caso de Total Nacional, llevará 99
+        (2, "CPRO"),  # 99 si se trata de datos a nivel Total Comunidad o Total Nacional
+        (1, "codDistrElect"),  # Distrito electoral 9 en datos a nivel Total Provincial, Comunidad o Nacional
+        (50, "nomAmbito"),
+        (8, "pobDerecho"),
+        (5, "numMesas"),
+        (8, "censINE"),
+        (8, "censEscr"),
+        (8, "censCEREescr"),  # (Residentes Extranjeros)
+        (8, "totVotCERE"),
+        (8, "votAvance1"),
+        (8, "votAvance2"),
+        (8, "votBlanco"),
+        (8, "votNulo"),
+        (8, "votCands"),
+        (6, "numEscs"),  # cuando el municipio es la circunscripción electoral. Ceros en otros casos
+        (8, "votSI"),  # o ceros en otros procesos electorales
+        (8, "votNO"),  # o ceros en otros procesos electorales
+        (1, "datOfic")  # (S/N)
     ],
     # 8.- Fichero de DATOS DE CANDIDATURAS DE AMBITO SUPERIOR AL MUNICIPIO
     '08': [
-        (2, "tipoElec", np.uint32),
-        (4, "yearElec", np.uint32),
-        (2, "mesElec", np.uint32),
-        (1, "numVuelta", np.uint32),
-        (2, "codAut", np.uint32),  # En el caso de Total Nacional, llevará 99
-        (2, "codProv", np.uint32),  # 99 si se trata de datos a nivel Total Comunidad o Total Nacional
-        (1, "codDistr", np.uint32),  # Distrito electoral 9 en datos a nivel Total Provincial, Comunidad o Nacional
-        (6, "codCand", np.uint32),
-        (8, "votCand", np.uint32),
-        (5, "numPersElegidas", np.uint32)
+        (2, "tipoElec"),
+        (4, "yearElec"),
+        (2, "mesElec"),
+        (1, "numVuelta"),
+        (2, "CCA"),  # En el caso de Total Nacional, llevará 99
+        (2, "CPRO"),  # 99 si se trata de datos a nivel Total Comunidad o Total Nacional
+        (1, "codDistrElect"),  # Distrito electoral 9 en datos a nivel Total Provincial, Comunidad o Nacional
+        (6, "codCand"),
+        (8, "votCand"),
+        (5, "numPersElegidas")
     ],
     # 9.- Fichero de DATOS COMUNES DE MESAS y del C.E.R.A
     '09': [
-        (2, "tipoElec", np.uint32),
-        (4, "yearElec", np.uint32),
-        (2, "mesElec", np.uint32),
-        (1, "numVuelta", np.uint32),
-        (2, "codAut", np.uint32),  # 99 si se trata del Total Nacional del C.E.R.A
-        (2, "codProv", np.uint32),  # 99 si se trata del Total Nacional o Autonómico del C.E.R.A
-        (3, "codMunic", np.uint32),  # (999 = C.E.R.A.)
-        (2, "numDistr", np.uint32),  # 01 si distrito único. En C.E.R.A., núm del ‘Distrito Electoral’ o 09 si provincia
-        (4, "codSeccion", str),  # (tres dígitos seguidos de un espacio, letra mayúscula u otro dígito)
-        (1, "codMesa", str),  # (una letra mayúscula identificando la mesa o una ‘U’ en caso de mesa única)
-        (7, "censINE", np.uint32),
-        (7, "censEscr", np.uint32),
-        (7, "censCEREescr", np.uint32),  # (Residentes Extranjeros)
-        (7, "totVotCERE", np.uint32),
-        (7, "votAvance1", np.uint32),
-        (7, "votAvance2", np.uint32),
-        (7, "votBlanco", np.uint32),
-        (7, "votNulo", np.uint32),
-        (7, "votCands", np.uint32),
-        (7, "votSI", np.uint32),  # o ceros en otros procesos electorales
-        (7, "votNO", np.uint32),  # o ceros en otros procesos electorales
-        (1, "datOfic", str)  # (S/N)
+        (2, "tipoElec"),
+        (4, "yearElec"),
+        (2, "mesElec"),
+        (1, "numVuelta"),
+        (2, "CCA"),  # 99 si se trata del Total Nacional del C.E.R.A
+        (2, "CPRO"),  # 99 si se trata del Total Nacional o Autonómico del C.E.R.A
+        (3, "CMUN"),  # (999 = C.E.R.A.)
+        (2, "CDIS"),  # 01 si distrito único. En C.E.R.A., núm del ‘Distrito Electoral’ o 09 si provincia
+        (4, "CSEC"),  # (tres dígitos seguidos de un espacio, letra mayúscula u otro dígito)
+        (1, "codMesa"),  # (una letra mayúscula identificando la mesa o una ‘U’ en caso de mesa única)
+        (7, "censINE"),
+        (7, "censEscr"),
+        (7, "censCEREescr"),  # (Residentes Extranjeros)
+        (7, "totVotCERE"),
+        (7, "votAvance1"),
+        (7, "votAvance2"),
+        (7, "votBlanco"),
+        (7, "votNulo"),
+        (7, "votCands"),
+        (7, "votSI"),  # o ceros en otros procesos electorales
+        (7, "votNO"),  # o ceros en otros procesos electorales
+        (1, "datOfic")  # (S/N)
     ],
     # 10.- Fichero de DATOS DE CANDIDATURAS DE MESAS y del C.E.R.A
     '10': [
-        (2, "tipoElec", np.uint32),
-        (4, "yearElec", np.uint32),
-        (2, "mesElec", np.uint32),
-        (1, "numVuelta", np.uint32),
-        (2, "codAut", np.uint32),  # 99 si se trata del Total Nacional del C.E.R.A
-        (2, "codProv", np.uint32),  # 99 si se trata del Total Nacional o Autonómico del C.E.R.A
-        (3, "codMunic", np.uint32),  # (999 = C.E.R.A.)
-        (2, "numDistr", np.uint32),  # 01 si distrito único. En C.E.R.A., núm del ‘Distrito Electoral’ o 09 si provincia
-        (4, "codSeccion", str),  # (tres dígitos seguidos de un espacio, letra mayúscula u otro dígito)
-        (1, "codMesa", str),  # (una letra mayúscula identificando la mesa o una ‘U’ en caso de mesa única)
-        (6, "codCand", np.uint32),  # Código de la candidatura o del Senador en elecciones al Senado
-        (7, "votCand", np.uint32)
+        (2, "tipoElec"),
+        (4, "yearElec"),
+        (2, "mesElec"),
+        (1, "numVuelta"),
+        (2, "CCA"),  # 99 si se trata del Total Nacional del C.E.R.A
+        (2, "CPRO"),  # 99 si se trata del Total Nacional o Autonómico del C.E.R.A
+        (3, "CMUN"),  # (999 = C.E.R.A.)
+        (2, "CDIS"),  # 01 si distrito único. En C.E.R.A., núm del ‘Distrito Electoral’ o 09 si provincia
+        (4, "CSEC"),  # (tres dígitos seguidos de un espacio, letra mayúscula u otro dígito)
+        (1, "codMesa"),  # (una letra mayúscula identificando la mesa o una ‘U’ en caso de mesa única)
+        (6, "codCand"),  # Código de la candidatura o del Senador en elecciones al Senado
+        (7, "votCand")
     ],
     # 11.- Fichero de DATOS COMUNES DE MUNICIPIOS menores de 250 habitantes. (Solo en Elecciones Municipales)
     '11': [
-        (2, "tipoMunic", np.uint32),  # 08 = entre 100 y 250 habitantes, 09 = menores de 100 habitantes
-        (4, "yearElec", np.uint32),
-        (2, "mesElec", np.uint32),
-        (1, "numVuelta", np.uint32),
-        (2, "codAut", np.uint32),
-        (2, "codProv", np.uint32),
-        (3, "codMunic", np.uint32),
-        (100, "nomMunic", str),  # o del distrito municipal
-        (3, "codPJ", np.uint32),
-        (3, "codDP", np.uint32),
-        (3, "codCom", np.uint32),  # Comarca
-        (3, "pobDerecho", np.uint32),
-        (2, "numMesas", np.uint32),
-        (3, "censINE", np.uint32),
-        (3, "censEscr", np.uint32),
-        (3, "censCEREescr", np.uint32),  # (Residentes Extranjeros)
-        (3, "totVotCERE", np.uint32),
-        (3, "votAvance1", np.uint32),
-        (3, "votAvance2", np.uint32),
-        (3, "votBlanco", np.uint32),
-        (3, "votNulo", np.uint32),
-        (3, "votCands", np.uint32),
-        (2, "numEscs", np.uint32),  # cuando el municipio es la circunscripción electoral. Ceros en otros casos
-        (1, "datOfic", str)  # (S/N)
+        (2, "tipoMunic"),  # 08 = entre 100 y 250 habitantes, 09 = menores de 100 habitantes
+        (4, "yearElec"),
+        (2, "mesElec"),
+        (1, "numVuelta"),
+        (2, "CCA"),
+        (2, "CPRO"),
+        (3, "CMUN"),
+        (100, "nomMunic"),  # o del distrito municipal
+        (3, "codPJ"),
+        (3, "codDP"),
+        (3, "codCom"),  # Comarca
+        (3, "pobDerecho"),
+        (2, "numMesas"),
+        (3, "censINE"),
+        (3, "censEscr"),
+        (3, "censCEREescr"),  # (Residentes Extranjeros)
+        (3, "totVotCERE"),
+        (3, "votAvance1"),
+        (3, "votAvance2"),
+        (3, "votBlanco"),
+        (3, "votNulo"),
+        (3, "votCands"),
+        (2, "numEscs"),  # cuando el municipio es la circunscripción electoral. Ceros en otros casos
+        (1, "datOfic")  # (S/N)
     ],
     # 12.- Fichero de DATOS DE CANDIDATURAS DE MUNICIPIOS menores de 250 hab. (Solo en Elecciones Municipales)
     '12': [
-        (2, "tipoMunic", np.uint32),  # 08 = entre 100 y 250 habitantes, 09 = menores de 100 habitantes
-        (4, "yearElec", np.uint32),
-        (2, "mesElec", np.uint32),
-        (1, "numVuelta", np.uint32),
-        (2, "codProv", np.uint32),
-        (3, "codMunic", np.uint32),
-        (6, "codCand", np.uint32),
-        (3, "votCand", np.uint32),
-        (2, "numCandsObten", np.uint32),
-        (25, "nomPersCand", str),
-        (25, "ape1PersCand", str),
-        (25, "ape2PersCand", str),
-        (1, "sexPersCand", str),  # (Masculino/Femenino)
-        (2, "fecNacDiaPersCand", np.uint32),
-        (2, "fecNacMesPersCand", np.uint32),
-        (4, "fecNacYearPersCand", np.uint32),
-        (10, "dniPersCand", str),
-        (3, "votPersCand", np.uint32),
-        (1, "elegidaPersCand", str),  # (S/N)
+        (2, "tipoMunic"),  # 08 = entre 100 y 250 habitantes, 09 = menores de 100 habitantes
+        (4, "yearElec"),
+        (2, "mesElec"),
+        (1, "numVuelta"),
+        (2, "CPRO"),
+        (3, "CMUN"),
+        (6, "codCand"),
+        (3, "votCand"),
+        (2, "numCandsObten"),
+        (25, "nomPersCand"),
+        (25, "ape1PersCand"),
+        (25, "ape2PersCand"),
+        (1, "sexPersCand"),  # (Masculino/Femenino)
+        (2, "fecNacDiaPersCand"),
+        (2, "fecNacMesPersCand"),
+        (4, "fecNacYearPersCand"),
+        (10, "dniPersCand"),
+        (3, "votPersCand"),
+        (1, "elegidaPersCand"),  # (S/N)
     ]
 
+}
+
+fieldTypes = {
+    'adjuntaFich01': np.uint32,
+    'adjuntaFich02': np.uint32,
+    'adjuntaFich03': np.uint32,
+    'adjuntaFich04': np.uint32,
+    'adjuntaFich05': np.uint32,
+    'adjuntaFich0510': np.uint32,
+    'adjuntaFich06': np.uint32,
+    'adjuntaFich0610': np.uint32,
+    'adjuntaFich07': np.uint32,
+    'adjuntaFich0710': np.uint32,
+    'adjuntaFich08': np.uint32,
+    'adjuntaFich0810': np.uint32,
+    'adjuntaFich09': np.uint32,
+    'adjuntaFich10': np.uint32,
+    'adjuntaFich1104': np.uint32,
+    'adjuntaFich1204': np.uint32,
+    'ambito': str,
+    'ape1PersCand': str,
+    'ape2PersCand': str,
+    'censCEREescr': np.uint32,
+    'censEscr': np.uint32,
+    'censINE': np.uint32,
+    'codAmbito': np.uint32,
+    'CCA': str,
+    'codCand': np.uint32,
+    'codCandAcumAut': np.uint32,
+    'codCandAcumNac': np.uint32,
+    'codCandAcumProv': np.uint32,
+    'codCom': np.uint32,
+    'codDP': np.uint32,
+    'codDistrElect': str,
+    'codMesa': str,
+    'CMUN': str,
+    'codPJ': np.uint32,
+    'CPRO': str,
+    'CSEC': str,
+    'datOfic': str,
+    'dniPersCand': str,
+    'elegidaPersCand': str,
+    'fecNacDiaPersCand': np.uint32,
+    'fecNacMesPersCand': np.uint32,
+    'fecNacYearPersCand': np.uint32,
+    'fechaDIA': np.uint32,
+    'fechaMES': np.uint32,
+    'fechaYEAR': np.uint32,
+    'horaApert': str,
+    'horaAvance1': str,
+    'horaAvance2': str,
+    'horaCierre': str,
+    'mesElec': np.uint32,
+    'nomAmbito': str,
+    'nomMunic': str,
+    'nomPersCand': str,
+    'nombreCand': str,
+    'numCandsObten': np.uint32,
+    'CDIS': str,
+    'numEscs': np.uint32,
+    'numMesas': np.uint32,
+    'numOrdenPersCand': np.uint32,
+    'numPersElegidas': np.uint32,
+    'numVuelta': np.uint32,
+    'pobDerecho': np.uint32,
+    'sexPersCand': str,
+    'siglaCand': str,
+    'tipoElec': np.uint32,
+    'tipoMunic': np.uint32,
+    'tipoPersCand': str,
+    'totVotCERE': np.uint32,
+    'votAvance1': np.uint32,
+    'votAvance2': np.uint32,
+    'votBlanco': np.uint32,
+    'votCand': np.uint32,
+    'votCands': np.uint32,
+    'votNO': np.uint32,
+    'votNulo': np.uint32,
+    'votPersCand': np.uint32,
+    'votSI': np.uint32,
+    'yearElec': np.uint32
 }
