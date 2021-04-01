@@ -2,7 +2,7 @@ import pandas as pd
 import yaml
 from jsonschema import validate, Draft7Validator
 
-from utils.zipfiles import fileOpener
+#from utils.zipfiles import fileOpener
 from .retocaDFschemas import errorFixSchema, transformDFschema, validatorDFschema
 
 SEPARATOR = "\n- "

@@ -11,13 +11,12 @@ import pandas as pd
 import psutil
 from scipy.sparse import dok_matrix
 
+from seccCensales.fixINE import fixesINE
+from seccCensales.operDF import manipSecCensales, validacionesSecCensales
 from utils.operations.retocaDF import applyDFtransforms, passDFvalidators, applyDFerrorFix
 from utils.zipfiles import fileOpener
-from seccCensales.operDF import manipSecCensales, validacionesSecCensales
-from seccCensales.fixINE import fixesINE
 
-#Fuente de datos:
-
+# Fuente de datos:
 secNIV = ['CCAA', 'PRO', 'MUN', 'DIS', 'SEC']
 # secNIV = ['CCAA', 'PRO']
 
@@ -57,11 +56,11 @@ def leeContornoSeccionesCensales(fname):
 
     baregdf = gpd.read_file(fname)
 
-    primPass = passDFvalidators(baregdf,validacionesSecCensales)
+    primPass = passDFvalidators(baregdf, validacionesSecCensales)
     if primPass:
         logger.error(f"Fichero: {fname}. Errores detectados. Aplicando arreglos.{primPass}")
         fixedDF = applyDFerrorFix(baregdf, fixesINE)
-        segPass = passDFvalidators(baregdf,validacionesSecCensales)
+        segPass = passDFvalidators(baregdf, validacionesSecCensales)
         if segPass:
             logger.error(f"Fichero: {fname}. Errores detectados {segPass}")
             raise ValueError(f"Problemas en fichero {fname}")
@@ -243,7 +242,6 @@ def creaMatrizRecJL(seccCensales, listaNiv, JLconfig=None):
     configParallel['prefer'] = JLconfig.get('joblibmode', 'threads')
 
     indexNiv = seccCensales.contornos[listaNiv[0]]['contAgr'].index
-    print(indexNiv)
 
     resultJL = Parallel(**configParallel)(delayed(encuentraVecinosJL)(x, y) for x, y in product(indexNiv, indexNiv))
 
@@ -267,7 +265,7 @@ class SeccionesCensales(object):
     def lazyLoad(self, permisivo=False):
         if self.gdf is None:
             self.gdf = leeContornoSeccionesCensales(self.fname)
-            # self.controlCalidad(permisivo)
+            self.controlCalidad(permisivo)
 
         return self.gdf
 
