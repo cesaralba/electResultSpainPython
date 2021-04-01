@@ -232,8 +232,6 @@ def creaMatrizRecJL(seccCensales, listaNiv, JLconfig=None):
 
         return result
 
-        pass
-
     if JLconfig is None:
         JLconfig = {}
     configParallel = {'verbose': 20}
@@ -390,7 +388,6 @@ class SeccionesCensales(object):
         with fileOpener(fname, "rb") as handler:
             obj = load(handler)
         return obj
-        pass
 
 
 #####################################################################################################################
