@@ -11,58 +11,70 @@ typeColName = {"type": "string", "pattern": regexColName, "minLength": 1}
 errorFixSchema = {
     "type": "array",
     "definitions": {
-        "colValuePair": {'type': 'object', 'properties': {regexColName: typeNumberOrValue}},
+        "colValuePair": {
+            "type": "object",
+            "properties": {regexColName: typeNumberOrValue},
+        },
         "pairCondFix": {
             "type": "object",
-            "properties": {"condition": {"$ref": "#/definitions/colValuePair"},
-                           "fix": {"$ref": "#/definitions/colValuePair"}
-                           },
+            "properties": {
+                "condition": {"$ref": "#/definitions/colValuePair"},
+                "fix": {"$ref": "#/definitions/colValuePair"},
+            },
             "required": ["condition", "fix"],
-            "additionalProperties": True
-        }
+            "additionalProperties": True,
+        },
     },
     "items": {"$ref": "#/definitions/pairCondFix"},
-    "minItems": 1
+    "minItems": 1,
 }
 
 transformDFschema = {
     "type": "array",
-
     "definitions": {
         "colName": typeColName,
-        "colList": {"type": "array",
-                    "items": {
-                        "$ref": "#/definitions/colName"},
-                    "minItems": 1},
-
-        "concatTrfParam": {'type': 'object', 'properties': {regexColName: {"$ref": "#/definitions/colList"}}},
-        "concatTrfOp": {'type': 'object', 'properties': {"concat": {"$ref": "#/definitions/concatTrfParam"}},
-                        "additionalProperties": False},
-
-        "monocolTrfParam": {'type': 'object',
-                            'properties': {'prefix': {"type": "string", "minLength": 1, "pattern": regexColName},
-                                           'cols': {"$ref": "#/definitions/colList"},
-                                           },
-                            "required": ["cols"]
-                            },
-        "monocolTrfOp": {'type': 'object',
-                         'properties': {"2numeric": {"$ref": "#/definitions/monocolTrfParam"},
-                                        "upper": {"$ref": "#/definitions/monocolTrfParam"},
-                                        "lower": {"$ref": "#/definitions/monocolTrfParam"}
-                                        },
-                         'maxProperties': 1,
-                         'minProperties': 1,
-                         "additionalProperties": False
-                         },
-
+        "colList": {
+            "type": "array",
+            "items": {"$ref": "#/definitions/colName"},
+            "minItems": 1,
+        },
+        "concatTrfParam": {
+            "type": "object",
+            "properties": {regexColName: {"$ref": "#/definitions/colList"}},
+        },
+        "concatTrfOp": {
+            "type": "object",
+            "properties": {"concat": {"$ref": "#/definitions/concatTrfParam"}},
+            "additionalProperties": False,
+        },
+        "monocolTrfParam": {
+            "type": "object",
+            "properties": {
+                "prefix": {"type": "string", "minLength": 1, "pattern": regexColName},
+                "cols": {"$ref": "#/definitions/colList"},
+            },
+            "required": ["cols"],
+        },
+        "monocolTrfOp": {
+            "type": "object",
+            "properties": {
+                "2numeric": {"$ref": "#/definitions/monocolTrfParam"},
+                "upper": {"$ref": "#/definitions/monocolTrfParam"},
+                "lower": {"$ref": "#/definitions/monocolTrfParam"},
+            },
+            "maxProperties": 1,
+            "minProperties": 1,
+            "additionalProperties": False,
+        },
         "dfOps": {
-            "oneOf": [{"$ref": "#/definitions/concatTrfOp"},
-                      {"$ref": "#/definitions/monocolTrfOp"}
-                      ]
-        }
+            "oneOf": [
+                {"$ref": "#/definitions/concatTrfOp"},
+                {"$ref": "#/definitions/monocolTrfOp"},
+            ]
+        },
     },
     "items": {"$ref": "#/definitions/dfOps"},
-    "minItems": 1
+    "minItems": 1,
 }
 
 validatorDFschema = {
@@ -70,15 +82,25 @@ validatorDFschema = {
     "type": "array",
     "definitions": {
         "colName": typeColName,
-        "colNamePair": {"type": "array", "items": {"$ref": "#/definitions/colName"}, "minItems": 2, "maxItems": 2},
-        "complexColNamePair": {'type': 'object', 'properties': {"pair": {"$ref": "#/definitions/colNamePair"}},
-                               "required": ["pair"], "additionalProperties": True},
+        "colNamePair": {
+            "type": "array",
+            "items": {"$ref": "#/definitions/colName"},
+            "minItems": 2,
+            "maxItems": 2,
+        },
+        "complexColNamePair": {
+            "type": "object",
+            "properties": {"pair": {"$ref": "#/definitions/colNamePair"}},
+            "required": ["pair"],
+            "additionalProperties": True,
+        },
         "validatorItem": {
-            "oneOf": [{"$ref": "#/definitions/colNamePair"},
-                      {"$ref": "#/definitions/complexColNamePair"}
-                      ]
-        }
+            "oneOf": [
+                {"$ref": "#/definitions/colNamePair"},
+                {"$ref": "#/definitions/complexColNamePair"},
+            ]
+        },
     },
     "minItems": 1,
-    "items": {"$ref": "#/definitions/validatorItem"}
+    "items": {"$ref": "#/definitions/validatorItem"},
 }

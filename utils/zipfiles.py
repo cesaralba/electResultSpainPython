@@ -3,7 +3,7 @@ import gzip
 import zipfile as zf
 
 
-def fileOpener(filename, mode='r'):
+def fileOpener(filename, mode="r"):
     """
     Devuelve un handler de fichero abierto en función de la extensión del fichero
     :param filename: Nombre del fichero de entrada / salida. Extensiones soportadas: bz2 (bzip 2) y gz (gzip)
@@ -11,10 +11,10 @@ def fileOpener(filename, mode='r'):
     :return: un file handler donde se puede leer / escribir.
     """
 
-    extraMode = 't' if 'b' not in mode else ''
-    if filename.endswith('.gz'):
-        f = gzip.open(filename, mode +  extraMode)
-    elif filename.endswith('.bz2'):
+    extraMode = "t" if "b" not in mode else ""
+    if filename.endswith(".gz"):
+        f = gzip.open(filename, mode + extraMode)
+    elif filename.endswith(".bz2"):
         f = bz2.open(filename, mode + extraMode)
     else:
         f = open(filename, mode)

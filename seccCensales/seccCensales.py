@@ -13,25 +13,84 @@ from scipy.sparse import dok_matrix
 
 from seccCensales.fixINE import fixesINE
 from seccCensales.operDF import manipSecCensales, validacionesSecCensales
-from utils.operations.retocaDF import applyDFtransforms, passDFvalidators, applyDFerrorFix
+from utils.operations.retocaDF import (
+    applyDFtransforms,
+    passDFvalidators,
+    applyDFerrorFix,
+)
 from utils.zipfiles import fileOpener
 
 # Fuente de datos:
-secNIV = ['CCAA', 'PRO', 'MUN', 'DIS', 'SEC']
+secNIV = ["CCAA", "PRO", "MUN", "DIS", "SEC"]
 # secNIV = ['CCAA', 'PRO']
 
-resultBase = {'PAIS': {'claveAgr': None, 'abrev': 'p'},
-              'CCAA': {'claveAgr': 'CCA', 'extraCols': ['NCA', 'nCCA'], 'abrev': 'a'},
-              'PRO': {'claveAgr': 'CPRO', 'extraCols': ['CCA', 'NCA', 'NPRO', 'nCCA', 'nCPRO'], 'abrev': 'r'},
-              'MUN': {'claveAgr': 'CUMUN', 'abrev': 'm',
-                      'extraCols': ['CCA', 'CPRO', 'CMUN', 'NCA', 'NPRO', 'NMUN', 'nCCA', 'nCPRO', 'nCMUN', 'nCUMUN']},
-              'DIS': {'claveAgr': 'CUDIS', 'abrev': 'd',
-                      'extraCols': ['CCA', 'CPRO', 'CMUN', 'CDIS', 'CUMUN', 'NCA', 'NPRO', 'NMUN', 'nCCA', 'nCPRO',
-                                    'nCMUN', 'nCDIS', 'nCUMUN', 'nCUDIS']},
-              'SEC': {'claveAgr': 'CUSEC', 'abrev': 's',
-                      'extraCols': ['CCA', 'CPRO', 'CMUN', 'CDIS', 'CUMUN', 'CUDIS', 'NCA', 'NPRO', 'NMUN', 'nCCA',
-                                    'nCPRO', 'nCMUN', 'nCDIS', 'nCUMUN', 'nCUDIS', 'nCUSEC']}
-              }
+resultBase = {
+    "PAIS": {"claveAgr": None, "abrev": "p"},
+    "CCAA": {"claveAgr": "CCA", "extraCols": ["NCA", "nCCA"], "abrev": "a"},
+    "PRO": {
+        "claveAgr": "CPRO",
+        "extraCols": ["CCA", "NCA", "NPRO", "nCCA", "nCPRO"],
+        "abrev": "r",
+    },
+    "MUN": {
+        "claveAgr": "CUMUN",
+        "abrev": "m",
+        "extraCols": [
+            "CCA",
+            "CPRO",
+            "CMUN",
+            "NCA",
+            "NPRO",
+            "NMUN",
+            "nCCA",
+            "nCPRO",
+            "nCMUN",
+            "nCUMUN",
+        ],
+    },
+    "DIS": {
+        "claveAgr": "CUDIS",
+        "abrev": "d",
+        "extraCols": [
+            "CCA",
+            "CPRO",
+            "CMUN",
+            "CDIS",
+            "CUMUN",
+            "NCA",
+            "NPRO",
+            "NMUN",
+            "nCCA",
+            "nCPRO",
+            "nCMUN",
+            "nCDIS",
+            "nCUMUN",
+            "nCUDIS",
+        ],
+    },
+    "SEC": {
+        "claveAgr": "CUSEC",
+        "abrev": "s",
+        "extraCols": [
+            "CCA",
+            "CPRO",
+            "CMUN",
+            "CDIS",
+            "CUMUN",
+            "CUDIS",
+            "NCA",
+            "NPRO",
+            "NMUN",
+            "nCCA",
+            "nCPRO",
+            "nCMUN",
+            "nCDIS",
+            "nCUMUN",
+            "nCUDIS",
+            "nCUSEC",
+        ],
+    },
+}
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -41,7 +100,8 @@ ch.setLevel(logging.DEBUG)
 
 # create formatter
 formatter = logging.Formatter(
-    '%(asctime)s [%(process)d:@%(name)s %(levelname)s %(relativeCreated)12dms]: %(message)s')
+    "%(asctime)s [%(process)d:@%(name)s %(levelname)s %(relativeCreated)12dms]: %(message)s"
+)
 
 # add formatter to ch
 ch.setFormatter(formatter)
@@ -58,7 +118,9 @@ def leeContornoSeccionesCensales(fname):
 
     primPass = passDFvalidators(baregdf, validacionesSecCensales)
     if primPass:
-        logger.error(f"Fichero: {fname}. Errores detectados. Aplicando arreglos.{primPass}")
+        logger.error(
+            f"Fichero: {fname}. Errores detectados. Aplicando arreglos.{primPass}"
+        )
         fixedDF = applyDFerrorFix(baregdf, fixesINE)
         segPass = passDFvalidators(baregdf, validacionesSecCensales)
         if segPass:
@@ -68,7 +130,7 @@ def leeContornoSeccionesCensales(fname):
         fixedDF = baregdf
     result = applyDFtransforms(fixedDF, manipSecCensales)
     # result = creaNumCols(baregdf, ['CCA', 'CPRO', 'CMUN', 'CDIS', 'CSEC', 'CUMUN', 'CUDIS', 'CUSEC'])
-    result['numcell'] = 1  # Se usa para contar secciones para agrupación mayor
+    result["numcell"] = 1  # Se usa para contar secciones para agrupación mayor
 
     timeOut = time()
     durac = timeOut - timeIn
@@ -79,7 +141,9 @@ def leeContornoSeccionesCensales(fname):
 
 def agrupaContornos(df, claveAgr, extraCols=None):
     auxClave = claveAgr if checkList(claveAgr) else [claveAgr]
-    merged = df[set(auxClave + ['geometry', 'numcell'])].dissolve(by=claveAgr, aggfunc=sum)
+    merged = df[set(auxClave + ["geometry", "numcell"])].dissolve(
+        by=claveAgr, aggfunc=sum
+    )
 
     # Si no hay que poner etiqueta, our job is done
     if extraCols is None:
@@ -107,7 +171,7 @@ def creaNumCols(df, cols):
 
     for c in auxCols:
         if c in result.columns:
-            result['n' + c] = pd.to_numeric(result[c])
+            result["n" + c] = pd.to_numeric(result[c])
 
     return result.set_index(indexCol) if indexCol else result
 
@@ -132,8 +196,8 @@ def encuentraVecinos(cat, restoCats, datos, idx1, idx2, intra=True):
 
     for kx, ky in product(idx1, idx2):
 
-        dx = datos.contornos[cat]['contAgr'].loc[kx]
-        dy = datos.contornos[cat]['contAgr'].loc[ky]
+        dx = datos.contornos[cat]["contAgr"].loc[kx]
+        dy = datos.contornos[cat]["contAgr"].loc[ky]
 
         if intra and (dy.idx < dx.idx):
             continue
@@ -142,12 +206,17 @@ def encuentraVecinos(cat, restoCats, datos, idx1, idx2, intra=True):
         gy = dy.geometry
 
         if (kx == ky) or gx.intersects(gy):
-            result[cat].append((dx['idx'], dy['idx']))
+            result[cat].append((dx["idx"], dy["idx"]))
 
             if restoCats:
-                deeperResult = encuentraVecinos(restoCats[0], restoCats[1:], datos,
-                                                datos.contornos[cat]['sup2k'].loc[kx],
-                                                datos.contornos[cat]['sup2k'].loc[ky], intra=(kx == ky))
+                deeperResult = encuentraVecinos(
+                    restoCats[0],
+                    restoCats[1:],
+                    datos,
+                    datos.contornos[cat]["sup2k"].loc[kx],
+                    datos.contornos[cat]["sup2k"].loc[ky],
+                    intra=(kx == ky),
+                )
 
                 for k in deeperResult:
                     result[k] += deeperResult[k]
@@ -168,9 +237,15 @@ def vecinos2DF(resVecinosList, secCensales, listaNiv):
 
     nivSet = set()
     auxMat = {
-        k: dok_matrix((len(secCensales.contornos[k]['contAgr']), len(secCensales.contornos[k]['contAgr'])), dtype=bool)
-        for k
-        in secCensales.claveNiveles}
+        k: dok_matrix(
+            (
+                len(secCensales.contornos[k]["contAgr"]),
+                len(secCensales.contornos[k]["contAgr"]),
+            ),
+            dtype=bool,
+        )
+        for k in secCensales.claveNiveles
+    }
     result = dict()
 
     for resVecinos in resVecinosList:
@@ -183,9 +258,9 @@ def vecinos2DF(resVecinosList, secCensales, listaNiv):
 
     for niv in nivSet:
         auxDF = pd.DataFrame.sparse.from_spmatrix(auxMat[niv])
-        auxDF.index = secCensales.contornos[niv]['contAgr'].index
-        auxDF.columns = secCensales.contornos[niv]['contAgr'].index
-        secCensales.contornos[niv]['matAdj'] = auxDF
+        auxDF.index = secCensales.contornos[niv]["contAgr"].index
+        auxDF.columns = secCensales.contornos[niv]["contAgr"].index
+        secCensales.contornos[niv]["matAdj"] = auxDF
         result[niv] = auxDF
 
     return result
@@ -214,19 +289,26 @@ def creaMatrizRecJL(seccCensales, listaNiv, JLconfig=None):
         restoCats = listaNiv[1:]
         result = {k: [] for k in ([cat] + restoCats)}
 
-        dx = seccCensales.contornos[cat]['contAgr'].loc[kx]
-        dy = seccCensales.contornos[cat]['contAgr'].loc[ky]
+        dx = seccCensales.contornos[cat]["contAgr"].loc[kx]
+        dy = seccCensales.contornos[cat]["contAgr"].loc[ky]
 
-        if (dy.idx < dx.idx):
+        if dy.idx < dx.idx:
             return result
 
         if (kx == ky) or dx.geometry.intersects(dy.geometry):
-            result[cat].append((dx['idx'], dy['idx']))
+            result[cat].append((dx["idx"], dy["idx"]))
 
             if restoCats:
-                indx = seccCensales.contornos[cat]['sup2k'].loc[kx]
-                indy = seccCensales.contornos[cat]['sup2k'].loc[ky]
-                deeperResult = encuentraVecinos(restoCats[0], restoCats[1:], seccCensales, indx, indy, intra=(kx == ky))
+                indx = seccCensales.contornos[cat]["sup2k"].loc[kx]
+                indy = seccCensales.contornos[cat]["sup2k"].loc[ky]
+                deeperResult = encuentraVecinos(
+                    restoCats[0],
+                    restoCats[1:],
+                    seccCensales,
+                    indx,
+                    indy,
+                    intra=(kx == ky),
+                )
                 for k in deeperResult:
                     result[k] += deeperResult[k]
 
@@ -234,14 +316,16 @@ def creaMatrizRecJL(seccCensales, listaNiv, JLconfig=None):
 
     if JLconfig is None:
         JLconfig = {}
-    configParallel = {'verbose': 20}
+    configParallel = {"verbose": 20}
     # TODO: Control de calidad con los parámetros
-    configParallel['n_jobs'] = JLconfig.get('nproc', 2)
-    configParallel['prefer'] = JLconfig.get('joblibmode', 'threads')
+    configParallel["n_jobs"] = JLconfig.get("nproc", 2)
+    configParallel["prefer"] = JLconfig.get("joblibmode", "threads")
 
-    indexNiv = seccCensales.contornos[listaNiv[0]]['contAgr'].index
+    indexNiv = seccCensales.contornos[listaNiv[0]]["contAgr"].index
 
-    resultJL = Parallel(**configParallel)(delayed(encuentraVecinosJL)(x, y) for x, y in product(indexNiv, indexNiv))
+    resultJL = Parallel(**configParallel)(
+        delayed(encuentraVecinosJL)(x, y) for x, y in product(indexNiv, indexNiv)
+    )
 
     resDF = vecinos2DF(resultJL, seccCensales, listaNiv)
 
@@ -254,7 +338,9 @@ class SeccionesCensales(object):
         auxClaveNiveles = [k for k in resultBase if k in niveles]
 
         if len(auxClaveNiveles) == 0:
-            raise ValueError(f'Niveles suministrados {niveles} no están entre los aceptables {secNIV}')
+            raise ValueError(
+                f"Niveles suministrados {niveles} no están entre los aceptables {secNIV}"
+            )
         self.claveNiveles = auxClaveNiveles
 
         self.contornos = {k: resultBase[k] for k in self.claveNiveles}
@@ -269,22 +355,43 @@ class SeccionesCensales(object):
 
     def controlCalidad(self, permisivo=False):
 
-        nomPairs = [('CCA', 'NCA'), ('CPRO', 'NPRO'), ('CUMUN', 'NMUN'), ('CUMUN', 'CMUN'), ('CUDIS', 'CDIS'),
-                    ('CUSEC', 'CSEC')]
+        nomPairs = [
+            ("CCA", "NCA"),
+            ("CPRO", "NPRO"),
+            ("CUMUN", "NMUN"),
+            ("CUMUN", "CMUN"),
+            ("CUDIS", "CDIS"),
+            ("CUSEC", "CSEC"),
+        ]
 
-        comps = [(c, n) for c, n in nomPairs if self.gdf[c].nunique() != len(self.gdf[[c, n]].drop_duplicates())]
+        comps = [
+            (c, n)
+            for c, n in nomPairs
+            if self.gdf[c].nunique() != len(self.gdf[[c, n]].drop_duplicates())
+        ]
 
         if comps:
             result = False
             # problemPairs = [str(pair) for pair, compRes in zip(nomPairs, comps) if not compRes]
-            logger.error("Control de calidad: fichero %s tiene problemas en los nombres: %s", self.fname,
-                         ",".join(map(str, comps)))
+            logger.error(
+                "Control de calidad: fichero %s tiene problemas en los nombres: %s",
+                self.fname,
+                ",".join(map(str, comps)),
+            )
             for c, n in comps:
                 pairCounts = self.gdf[[c, n]].drop_duplicates()[c].value_counts()
-                claveProblem = pairCounts[pairCounts > 1].reset_index()['index']
+                claveProblem = pairCounts[pairCounts > 1].reset_index()["index"]
                 for cp in claveProblem:
-                    nombresProb = self.gdf[self.gdf[c] == cp][n].value_counts().to_dict()
-                    logger.error("Problemas en datos de origen. %s:%s -> %s:%s", c, cp, n, nombresProb)
+                    nombresProb = (
+                        self.gdf[self.gdf[c] == cp][n].value_counts().to_dict()
+                    )
+                    logger.error(
+                        "Problemas en datos de origen. %s:%s -> %s:%s",
+                        c,
+                        cp,
+                        n,
+                        nombresProb,
+                    )
 
             if callable(permisivo):
                 # TODO: funcion que corrija
@@ -293,7 +400,9 @@ class SeccionesCensales(object):
                 logger.info("Modo permisivo: ignorando errores en datos suministrados")
                 result = True
             else:
-                logger.info("Modo no permisivo: no puedo seguir si hay errores en datos suministrados")
+                logger.info(
+                    "Modo no permisivo: no puedo seguir si hay errores en datos suministrados"
+                )
                 raise ValueError("Dataframe '%s' contiene errores. Bye" % self.fname)
         else:
             result = True
@@ -307,28 +416,38 @@ class SeccionesCensales(object):
         for k in self.claveNiveles[::-1]:
             timeIn = time()
             logger.info("Agrupando nivel %s", k)
-            if 'contAgr' in self.contornos[k]:
+            if "contAgr" in self.contornos[k]:
                 logger.info("Nivel %s ya hecho. Paso al siguiente.", k)
                 continue
             # Calcula cosas relativas al nivel inferior
             prevCont = self.gdf
-            prevK = 'ORIG'
+            prevK = "ORIG"
             for auxK in self.claveNiveles[::-1]:
                 if auxK == k:
                     logger.debug("Nivel inferior: %s", prevK)
                     break
-                prevCont = self.contornos[auxK]['contAgr']
+                prevCont = self.contornos[auxK]["contAgr"]
                 prevK = auxK
 
-            if 'claveAgr' in self.contornos[k] and self.contornos[k]['claveAgr']:
-                aux = agrupaContornos(prevCont, claveAgr=self.contornos[k]['claveAgr'],
-                                      extraCols=self.contornos[k].get('extraCols', None))
+            if "claveAgr" in self.contornos[k] and self.contornos[k]["claveAgr"]:
+                aux = agrupaContornos(
+                    prevCont,
+                    claveAgr=self.contornos[k]["claveAgr"],
+                    extraCols=self.contornos[k].get("extraCols", None),
+                )
             else:
-                auxDF = pd.DataFrame(data=['PAIS'] * len(prevCont), index=prevCont.index, columns=['auxKey'])
-                aux = agrupaContornos(prevCont.join(auxDF), claveAgr='auxKey',
-                                      extraCols=self.contornos[k].get('extraCols', None))
-            aux['idx'] = range(len(aux))
-            self.contornos[k]['contAgr'] = aux
+                auxDF = pd.DataFrame(
+                    data=["PAIS"] * len(prevCont),
+                    index=prevCont.index,
+                    columns=["auxKey"],
+                )
+                aux = agrupaContornos(
+                    prevCont.join(auxDF),
+                    claveAgr="auxKey",
+                    extraCols=self.contornos[k].get("extraCols", None),
+                )
+            aux["idx"] = range(len(aux))
+            self.contornos[k]["contAgr"] = aux
 
             # Calcula cosas relativas al nivel superior
             supK = None
@@ -339,34 +458,49 @@ class SeccionesCensales(object):
                 supK = auxK
 
             if supK:
-                kSupLevel = resultBase[supK].get('claveAgr', None)
-                curKagr = self.contornos[k]['claveAgr']
-                self.contornos[supK]['nInf'] = k
-                self.contornos[k]['nSup'] = supK
+                kSupLevel = resultBase[supK].get("claveAgr", None)
+                curKagr = self.contornos[k]["claveAgr"]
+                self.contornos[supK]["nInf"] = k
+                self.contornos[k]["nSup"] = supK
 
                 if kSupLevel in aux.reset_index().columns:
-                    self.contornos[supK]['sup2k'] = aux.reset_index().groupby(kSupLevel)[curKagr].apply(list)
+                    self.contornos[supK]["sup2k"] = (
+                        aux.reset_index().groupby(kSupLevel)[curKagr].apply(list)
+                    )
                 else:
-                    self.contornos[supK]['sup2k'] = pd.Series([aux.index.to_list()], index=['PAIS'])
+                    self.contornos[supK]["sup2k"] = pd.Series(
+                        [aux.index.to_list()], index=["PAIS"]
+                    )
             timeOut = time()
             durac = timeOut - timeIn
 
-            logger.info("Agrupado nivel %s. Entran: %i. Salen %i. Tiempo %.3f", k, len(prevCont),
-                        len(self.contornos[k]['contAgr']), durac)
+            logger.info(
+                "Agrupado nivel %s. Entran: %i. Salen %i. Tiempo %.3f",
+                k,
+                len(prevCont),
+                len(self.contornos[k]["contAgr"]),
+                durac,
+            )
 
     def calculaMatrizAdyacencia(self, permisivo=False, JLconfig=None):
 
         self.agrupaCosas(permisivo=permisivo)
 
-        listaNiv = [niv for niv in self.contornos if
-                    (len(self.contornos[niv]['contAgr']) > 1 and 'matAdj' not in self.contornos[niv])]
+        listaNiv = [
+            niv
+            for niv in self.contornos
+            if (
+                len(self.contornos[niv]["contAgr"]) > 1
+                and "matAdj" not in self.contornos[niv]
+            )
+        ]
 
         # result = creaMatrizRec(self, listaNiv)
 
         result = creaMatrizRecJL(self, listaNiv, JLconfig=JLconfig)
 
         for niv, mat in result.items():
-            self.contornos[niv]['matAdj'] = mat
+            self.contornos[niv]["matAdj"] = mat
 
         return result
 
@@ -395,8 +529,9 @@ class SeccionesCensales(object):
 #####################################################################################################################
 #####################################################################################################################
 
+
 def procesaArgumentos():
-    JOBLIBCHOICES = ['threads', 'processes']
+    JOBLIBCHOICES = ["threads", "processes"]
 
     def ayudaNiveles():
         result = ", ".join([f"{k} -> {resultBase[k].get('abrev')}" for k in resultBase])
@@ -404,21 +539,68 @@ def procesaArgumentos():
 
     parser = ArgumentParser(description="Procesa fichero de secciones censales del INE")
 
-    parser.add_argument('-i', '--input', dest='infile', action='store', type=str, required=True,
-                        help='Fichero de entrada con secciones censales')
-    parser.add_argument('-o', '--output', dest='outfile', action='store', type=str, required=True,
-                        help='Fichero de salida')
-    parser.add_argument('-n', '--niveles', dest='niveles', action='store', type=str, default='armds',
-                        help="Niveles a procesar: " + ayudaNiveles(), required=False)
-    parser.add_argument('-a', '--adyacencia', dest='adyacencia', action='store_true',
-                        help="Calcula matriz de adyacencia")
-    parser.add_argument('-p', '--permisivo', dest='permisivo', action='store_true',
-                        help="Acepta errores en dataframe")
+    parser.add_argument(
+        "-i",
+        "--input",
+        dest="infile",
+        action="store",
+        type=str,
+        required=True,
+        help="Fichero de entrada con secciones censales",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="outfile",
+        action="store",
+        type=str,
+        required=True,
+        help="Fichero de salida",
+    )
+    parser.add_argument(
+        "-n",
+        "--niveles",
+        dest="niveles",
+        action="store",
+        type=str,
+        default="armds",
+        help="Niveles a procesar: " + ayudaNiveles(),
+        required=False,
+    )
+    parser.add_argument(
+        "-a",
+        "--adyacencia",
+        dest="adyacencia",
+        action="store_true",
+        help="Calcula matriz de adyacencia",
+    )
+    parser.add_argument(
+        "-p",
+        "--permisivo",
+        dest="permisivo",
+        action="store_true",
+        help="Acepta errores en dataframe",
+    )
 
-    parser.add_argument('-j', '--numjobs', dest='nproc', action='store', type=int, required=False, default=2,
-                        help='Numero de procesos')
-    parser.add_argument('-t', '--joblibmode', dest='joblibmode', choices=JOBLIBCHOICES, required=False,
-                        default='threads', help='Modo de procesamiento paralelo')
+    parser.add_argument(
+        "-j",
+        "--numjobs",
+        dest="nproc",
+        action="store",
+        type=int,
+        required=False,
+        default=2,
+        help="Numero de procesos",
+    )
+    parser.add_argument(
+        "-t",
+        "--joblibmode",
+        dest="joblibmode",
+        choices=JOBLIBCHOICES,
+        required=False,
+        default="threads",
+        help="Modo de procesamiento paralelo",
+    )
 
     args = parser.parse_args()
 
@@ -430,9 +612,9 @@ def procesaArgNiveles(nivParam):
 
     paramSet = set(list(nivParam))
     for k in resultBase:
-        if resultBase[k]['abrev'] in paramSet:
+        if resultBase[k]["abrev"] in paramSet:
             result.append(k)
-            paramSet.remove(resultBase[k]['abrev'])
+            paramSet.remove(resultBase[k]["abrev"])
 
     if paramSet:
         logger.error("Niveles desconocidos en parámetro -n")
@@ -443,8 +625,8 @@ def procesaArgNiveles(nivParam):
 def procesaArgsJobLib(args):
     result = dict()
 
-    result['nproc'] = min(args.nproc, max(psutil.cpu_count() - 1, 1))
-    result['joblibmode'] = args.joblibmode
+    result["nproc"] = min(args.nproc, max(psutil.cpu_count() - 1, 1))
+    result["joblibmode"] = args.joblibmode
 
     return result
 

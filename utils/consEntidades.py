@@ -22,7 +22,9 @@ def aplicaTraducciones(serie, trads):
             if porig in dictSerie[cat]:
                 pdest = trads.traduce(porig)
                 if pdest not in dictSerie[cat]:
-                    raise ValueError("aplicaTraducciones: '%s' no está en '%s'" % (pdest, cat))
+                    raise ValueError(
+                        "aplicaTraducciones: '%s' no está en '%s'" % (pdest, cat)
+                    )
 
                 result[cat][pdest] += result[cat][porig]
                 result[cat][porig] -= result[cat][porig]
@@ -38,7 +40,7 @@ def consolidaPartidosIntraperiodo(df, claveDisc=None, trads=None):
         return trads
 
     # p* son porcentaje
-    targKeys = [x for x in df.partidos.columns.to_list() if not x[1].startswith('p')]
+    targKeys = [x for x in df.partidos.columns.to_list() if not x[1].startswith("p")]
 
     dfAux = df.partidos[targKeys].copy()
 
@@ -52,7 +54,7 @@ def consolidaPartidosIntraperiodo(df, claveDisc=None, trads=None):
 
     actDifs = difFil[difFil != 0]
 
-    if (len(actDifs) == 0):
+    if len(actDifs) == 0:
         return trads
 
     dictDif = serie2deepdict(actDifs)
@@ -68,7 +70,7 @@ def consolidaPartidosIntraperiodo(df, claveDisc=None, trads=None):
         realPos = realDifs[realDifs > 0]
         realNeg = realDifs[realDifs < 0]
 
-        for cat in ['vot']:
+        for cat in ["vot"]:
             if cat not in realPos:
                 continue
 
@@ -94,14 +96,32 @@ def consolidaDFesp(df):
     for g in df.groupby(df.idTerr.codAut.iloc[:, 0]):
         aux = g[1].copy()
 
-        trad = consolidaPartidosIntraperiodo(aux, claveDisc=('idTerr', 'codProv', np.nan, np.nan), trads=trad)
+        trad = consolidaPartidosIntraperiodo(
+            aux, claveDisc=("idTerr", "codProv", np.nan, np.nan), trads=trad
+        )
 
-    trad = consolidaPartidosIntraperiodo(df[df.idTerr.codProv.iloc[:, 0] == 99],
-                                         claveDisc=('idTerr', 'codAut', np.nan, np.nan), trads=trad)
+    trad = consolidaPartidosIntraperiodo(
+        df[df.idTerr.codProv.iloc[:, 0] == 99],
+        claveDisc=("idTerr", "codAut", np.nan, np.nan),
+        trads=trad,
+    )
 
-    newCols = sorted(list(set([(per, cat, trad[per].traduce(sigla)) for per, cat, sigla in df.partidos])))
-    auxResult = pd.DataFrame(data=np.zeros((df.shape[0], len(newCols)), dtype=np.float64),
-                             columns=pd.MultiIndex.from_tuples(newCols), index=df.partidos.index, dtype=np.float)
+    newCols = sorted(
+        list(
+            set(
+                [
+                    (per, cat, trad[per].traduce(sigla))
+                    for per, cat, sigla in df.partidos
+                ]
+            )
+        )
+    )
+    auxResult = pd.DataFrame(
+        data=np.zeros((df.shape[0], len(newCols)), dtype=np.float64),
+        columns=pd.MultiIndex.from_tuples(newCols),
+        index=df.partidos.index,
+        dtype=np.float,
+    )
 
     for c in df.partidos.columns:
         if c in auxResult:
@@ -110,9 +130,9 @@ def consolidaDFesp(df):
             tCol = (c[0], c[1], trad[c[0]].traduce(c[2]))
             auxResult[tCol] += df.partidos[c].copy().fillna(0)
 
-    dfColsSinPartidos = [x for x in df.columns.to_list() if x[0] != 'partidos']
+    dfColsSinPartidos = [x for x in df.columns.to_list() if x[0] != "partidos"]
 
-    auxResult = pd.concat([auxResult], keys=['partidos'], axis=1)
+    auxResult = pd.concat([auxResult], keys=["partidos"], axis=1)
     result = pd.concat([df[dfColsSinPartidos], auxResult], axis=1)
 
     return result
@@ -125,10 +145,12 @@ def extraeNivel(df, nivel):
     :param nivel: Uno de 'CIRCUNSCRIPCIÓN ELECTORAL', 'COMUNIDAD', 'ESPAÑA'
     :return:
     """
-    clavesValidas = ['CIRCUNSCRIPCIÓN ELECTORAL', 'COMUNIDAD', 'ESPAÑA']
+    clavesValidas = ["CIRCUNSCRIPCIÓN ELECTORAL", "COMUNIDAD", "ESPAÑA"]
     if nivel not in clavesValidas:
         raise KeyError(
-            "nivel '%s' incorrecto. Debe ser uno de %s" % (nivel, ", ".join(map(lambda x: "'%s'" % x, clavesValidas))))
+            "nivel '%s' incorrecto. Debe ser uno de %s"
+            % (nivel, ", ".join(map(lambda x: "'%s'" % x, clavesValidas)))
+        )
 
     if isinstance(df.idTerr.tipo, pd.DataFrame):
         return df[df.idTerr.tipo.iloc[:, 0] == nivel]
@@ -136,17 +158,25 @@ def extraeNivel(df, nivel):
         return df[df.idTerr.tipo == nivel]
 
 
-def preparaDatos(df, per='act'):
+def preparaDatos(df, per="act"):
     """
 
     :param df:
     :param per:
     :return:
     """
-    dfClavesIDterr = [x for x in df.columns.to_list() if x[0] == 'idTerr']
-    dfClavesTot = [x for x in df.columns.to_list() if x[0] == 'totales' and x[1] == per]
-    dfClavesVot = [x for x in df.columns.to_list() if x[0] == 'partidos' and x[1] == per and x[2] == 'vot']
-    dfClavesCarg = [x for x in df.columns.to_list() if x[0] == 'partidos' and x[1] == per and x[2] == 'carg']
+    dfClavesIDterr = [x for x in df.columns.to_list() if x[0] == "idTerr"]
+    dfClavesTot = [x for x in df.columns.to_list() if x[0] == "totales" and x[1] == per]
+    dfClavesVot = [
+        x
+        for x in df.columns.to_list()
+        if x[0] == "partidos" and x[1] == per and x[2] == "vot"
+    ]
+    dfClavesCarg = [
+        x
+        for x in df.columns.to_list()
+        if x[0] == "partidos" and x[1] == per and x[2] == "carg"
+    ]
 
     finalClavesIDterr = [(x[0], x[1]) for x in dfClavesIDterr]
     finalClavesTot = [(x[0], x[2]) for x in dfClavesTot]
@@ -155,6 +185,8 @@ def preparaDatos(df, per='act'):
 
     dfVot = df[dfClavesIDterr + dfClavesTot + dfClavesVot].copy()
     dfCarg = df[dfClavesIDterr + dfClavesCarg].copy()
-    dfVot.columns = pd.MultiIndex.from_tuples(finalClavesIDterr + finalClavesTot + finalClavesVot)
+    dfVot.columns = pd.MultiIndex.from_tuples(
+        finalClavesIDterr + finalClavesTot + finalClavesVot
+    )
     dfCarg.columns = pd.MultiIndex.from_tuples(finalClavesIDterr + finalClavesCarg)
     return dfVot, dfCarg

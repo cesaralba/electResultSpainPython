@@ -3,12 +3,12 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-colsControl = dict(votCand='votCands', numPersElegidas='numEscs')
+colsControl = dict(votCand="votCands", numPersElegidas="numEscs")
 
-colsIDProc = ['tipoElec', 'yearElec', 'mesElec', 'numVuelta']
-colsIDEnt = ['nCCA', 'nCPRO', 'nCMUN', 'nCDIS', 'nCSEC', 'codMesa']
+colsIDProc = ["tipoElec", "yearElec", "mesElec", "numVuelta"]
+colsIDEnt = ["nCCA", "nCPRO", "nCMUN", "nCDIS", "nCSEC", "codMesa"]
 columnsIdent = colsIDProc + colsIDEnt
-col2remove = ['codDP', 'codCom']
+col2remove = ["codDP", "codCom"]
 
 
 def clavesParaIndexar(dataframe):
@@ -34,15 +34,28 @@ def uniformizaCands(datosCands):
     :return: datraframe de candidaturas con informaci�n de acumulaci�n nacional
     """
 
-    columnsCands = ['tipoElec', 'yearElec', 'mesElec', 'codCand', 'codCandAcumNac']
-    columnsCandsNac = ['tipoElec', 'yearElec', 'mesElec', 'codCand', 'siglaCand', 'nombreCand']
+    columnsCands = ["tipoElec", "yearElec", "mesElec", "codCand", "codCandAcumNac"]
+    columnsCandsNac = [
+        "tipoElec",
+        "yearElec",
+        "mesElec",
+        "codCand",
+        "siglaCand",
+        "nombreCand",
+    ]
 
     dfCand = datosCands[columnsCands]
     dfCandNac = datosCands[columnsCandsNac]
 
-    cands2Merge = dfCand.merge(dfCandNac, left_on=['tipoElec', 'yearElec', 'mesElec', 'codCandAcumNac'],
-                               right_on=['tipoElec', 'yearElec', 'mesElec', 'codCand']
-                               ).drop(columns=['codCand_y']).rename(columns={'codCand_x': 'codCand'})
+    cands2Merge = (
+        dfCand.merge(
+            dfCandNac,
+            left_on=["tipoElec", "yearElec", "mesElec", "codCandAcumNac"],
+            right_on=["tipoElec", "yearElec", "mesElec", "codCand"],
+        )
+        .drop(columns=["codCand_y"])
+        .rename(columns={"codCand_x": "codCand"})
+    )
 
     return cands2Merge
 
@@ -68,8 +81,10 @@ def uniformizaIndices(dfdatos, dfresultados):
     faltanResultados = list(nombresTotal - nombresResultados)
 
     if nombresDatos == nombresResultados:
-        return dfdatos.reorder_levels(order=finalOrder).sort_index(), dfresultados.reorder_levels(
-            order=finalOrder).sort_index()
+        return (
+            dfdatos.reorder_levels(order=finalOrder).sort_index(),
+            dfresultados.reorder_levels(order=finalOrder).sort_index(),
+        )
 
     if faltanDatos:
         auxResultados = dfresultados.reset_index(level=faltanDatos)
@@ -87,11 +102,13 @@ def uniformizaIndices(dfdatos, dfresultados):
     else:
         resultResultados = dfresultados
 
-    return resultDatos.reorder_levels(order=finalOrder).sort_index(), resultResultados.reorder_levels(
-        order=finalOrder).sort_index()
+    return (
+        resultDatos.reorder_levels(order=finalOrder).sort_index(),
+        resultResultados.reorder_levels(order=finalOrder).sort_index(),
+    )
 
 
-def aplanaResultados(reselect, columnaDato='votCand'):
+def aplanaResultados(reselect, columnaDato="votCand"):
     """
     A partir de un diccionario con todos los datos cargados del ZIP, devuelve un diccionario con dataframes que
     tienen combinado el dataframe de información de "circunscripción" (sean mesa, municipio o "entidades superiores al
@@ -108,47 +125,63 @@ def aplanaResultados(reselect, columnaDato='votCand'):
     """
     result = dict()
 
-    if 'datosCandidatura' not in reselect:
-        raise KeyError("aplanaResultados: Datos de candidaturas 'datosCandidatura' no disponibles en parametro")
+    if "datosCandidatura" not in reselect:
+        raise KeyError(
+            "aplanaResultados: Datos de candidaturas 'datosCandidatura' no disponibles en parametro"
+        )
 
     if columnaDato not in colsControl:
-        raise KeyError("aplanaResultados: columnaDato suministrada '%s' no soportada." % columnaDato)
+        raise KeyError(
+            "aplanaResultados: columnaDato suministrada '%s' no soportada."
+            % columnaDato
+        )
 
-    infoCands = uniformizaCands(reselect['datosCandidatura'])
+    infoCands = uniformizaCands(reselect["datosCandidatura"])
 
     # Aplana los resultados a partir de los datos en el ZIP
     for clave in reselect:
         if clave not in reselect:
             print("aplanaResultados: clave '%s' no conocida." % clave)
             continue
-        if not clave.endswith('Result'):
+        if not clave.endswith("Result"):
             continue
 
         claveSinResult = clave.replace("Result", "")
 
         if claveSinResult not in reselect:
-            print("aplanaResultados: clave '%s' (datos territorio) no conocida." % clave)
+            print(
+                "aplanaResultados: clave '%s' (datos territorio) no conocida." % clave
+            )
             continue
 
         dfDatos = reselect[claveSinResult]
         actRemoval = [x for x in col2remove if x in dfDatos.columns]
 
-        dfDatosIndexed = dfDatos.set_index(clavesParaIndexar(dfDatos)).drop(labels=actRemoval, axis=1).sort_index()
+        dfDatosIndexed = (
+            dfDatos.set_index(clavesParaIndexar(dfDatos))
+            .drop(labels=actRemoval, axis=1)
+            .sort_index()
+        )
         if colsControl[columnaDato] not in dfDatosIndexed:
-            print("aplanaResultados: columna de control '%s' no est� en dataframe de datos '%s'" %
-                  (colsControl[columnaDato], claveSinResult))
+            print(
+                "aplanaResultados: columna de control '%s' no est� en dataframe de datos '%s'"
+                % (colsControl[columnaDato], claveSinResult)
+            )
             continue
         dfDatosIndexed.columns = pd.MultiIndex.from_tuples(
-            [(tipoClaveDatos(x, 'datosTerr'), x) for x in dfDatosIndexed.columns])
+            [(tipoClaveDatos(x, "datosTerr"), x) for x in dfDatosIndexed.columns]
+        )
 
         # Añade la informaci�n de cand nacional a los resultados
         dfResults = reselect[clave].merge(infoCands)
         if columnaDato not in dfResults:
-            print("aplanaResultados: columna de datos '%s' no est� en dataframe de resultados '%s'" % (columnaDato,
-                                                                                                       clave))
+            print(
+                "aplanaResultados: columna de datos '%s' no est� en dataframe de resultados '%s'"
+                % (columnaDato, clave)
+            )
             continue
 
-        claves2index = clavesParaIndexar(dfResults) + ['siglaCand']
+        claves2index = clavesParaIndexar(dfResults) + ["siglaCand"]
         claves2filter = claves2index + [columnaDato]
 
         # Cheap pivoting
@@ -158,52 +191,90 @@ def aplanaResultados(reselect, columnaDato='votCand'):
         dfDatosIndexed, resultPlanos = uniformizaIndices(dfDatosIndexed, resultPlanos)
 
         controlVotosCands = resultPlanos.apply(np.sum, axis=1).astype(np.uint32)
-        datosRef = dfDatosIndexed[('datosTerr', colsControl[columnaDato])]
+        datosRef = dfDatosIndexed[("datosTerr", colsControl[columnaDato])]
 
         if not controlVotosCands.equals(datosRef):
-            print("aplanaResultados: clave '%s' suma de votos de candidaturas en resultados no casa con DF de datos" %
-                  clave)
+            print(
+                "aplanaResultados: clave '%s' suma de votos de candidaturas en resultados no casa con DF de datos"
+                % clave
+            )
 
         result[clave] = recolocaTerrColumns(
-            pd.concat([dfDatosIndexed, resultPlanos], axis=1).reset_index(level=colsIDProc, col_level=1,
-                                                                          col_fill="idProc"))
+            pd.concat([dfDatosIndexed, resultPlanos], axis=1).reset_index(
+                level=colsIDProc, col_level=1, col_fill="idProc"
+            )
+        )
 
     # Separa los dataframes "planos" nativos en otros con las entidades que contienen
-    if 'datosSupMunicResult' in result:
-        clave = 'datosSupMunicResult'
+    if "datosSupMunicResult" in result:
+        clave = "datosSupMunicResult"
         auxDF = result[clave]
 
-        result['provResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[99], level='nCPRO')])
-        result['autResult'] = recolocaTerrColumns(
-            auxDF[auxDF.index.isin(values=[99], level='nCPRO') & ~ auxDF.index.isin(values=[99], level='nCCA')])
-        result['totResult'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='nCCA')])
+        result["provResult"] = recolocaTerrColumns(
+            auxDF[~auxDF.index.isin(values=[99], level="nCPRO")]
+        )
+        result["autResult"] = recolocaTerrColumns(
+            auxDF[
+                auxDF.index.isin(values=[99], level="nCPRO")
+                & ~auxDF.index.isin(values=[99], level="nCCA")
+            ]
+        )
+        result["totResult"] = recolocaTerrColumns(
+            auxDF[auxDF.index.isin(values=[99], level="nCCA")]
+        )
 
-    if 'datosMunicResult' in result:
-        clave = 'datosMunicResult'
+    if "datosMunicResult" in result:
+        clave = "datosMunicResult"
         auxDF = result[clave]
 
-        result['municResult'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='nCDIS')])
-        result['distrResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[99], level='nCDIS')])
+        result["municResult"] = recolocaTerrColumns(
+            auxDF[auxDF.index.isin(values=[99], level="nCDIS")]
+        )
+        result["distrResult"] = recolocaTerrColumns(
+            auxDF[~auxDF.index.isin(values=[99], level="nCDIS")]
+        )
 
-    if 'datosMesasResult' in result:
-        clave = 'datosMesasResult'
+    if "datosMesasResult" in result:
+        clave = "datosMesasResult"
         auxDF = result[clave]
 
-        result['mesaResult'] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[999], level='nCMUN')])
-        result['totCERA'] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level='nCCA')])
-        result['autCERA'] = recolocaTerrColumns(
-            auxDF[auxDF.index.isin(values=[999], level='nCMUN') & auxDF.index.isin(values=[99], level='nCPRO')])
-        result['provCERA'] = recolocaTerrColumns(
-            auxDF[auxDF.index.isin(values=[999], level='nCMUN') & ~auxDF.index.isin(values=[99], level='nCPRO')])
+        result["mesaResult"] = recolocaTerrColumns(
+            auxDF[~auxDF.index.isin(values=[999], level="nCMUN")]
+        )
+        result["totCERA"] = recolocaTerrColumns(
+            auxDF[auxDF.index.isin(values=[99], level="nCCA")]
+        )
+        result["autCERA"] = recolocaTerrColumns(
+            auxDF[
+                auxDF.index.isin(values=[999], level="nCMUN")
+                & auxDF.index.isin(values=[99], level="nCPRO")
+            ]
+        )
+        result["provCERA"] = recolocaTerrColumns(
+            auxDF[
+                auxDF.index.isin(values=[999], level="nCMUN")
+                & ~auxDF.index.isin(values=[99], level="nCPRO")
+            ]
+        )
 
     return result
 
 
 def tipoClaveDatos(k, defaultvalue):
-    iTerr = ['CCA', 'CPRO', 'codDistrElect', 'codPJ', 'CMUN', 'CDIS', 'CSEC', 'codMesa', 'nomAmbito',
-             'nomMunic']
+    iTerr = [
+        "CCA",
+        "CPRO",
+        "codDistrElect",
+        "codPJ",
+        "CMUN",
+        "CDIS",
+        "CSEC",
+        "codMesa",
+        "nomAmbito",
+        "nomMunic",
+    ]
 
-    result = 'idTerr' if k in iTerr else defaultvalue
+    result = "idTerr" if k in iTerr else defaultvalue
 
     return result
 
@@ -216,11 +287,23 @@ def recolocaTerrColumns(df):
     :return: dataframe nuevo con las columnas recolocadas
     """
 
-    iTerr = ['nCCA', 'nCPRO', 'codDistrElect', 'codPJ', 'nCMUN', 'nCDIS', 'nCSEC', 'codMesa', 'nomAmbito',
-             'nomMunic']
+    iTerr = [
+        "nCCA",
+        "nCPRO",
+        "codDistrElect",
+        "codPJ",
+        "nCMUN",
+        "nCDIS",
+        "nCSEC",
+        "codMesa",
+        "nomAmbito",
+        "nomMunic",
+    ]
 
     groupKeys = defaultdict(list)
-    renamedColumns = [(('idTerr' if t[1] in iTerr else t[0]), t[1]) for t in df.columns.tolist()]
+    renamedColumns = [
+        (("idTerr" if t[1] in iTerr else t[0]), t[1]) for t in df.columns.tolist()
+    ]
 
     df.columns = pd.MultiIndex.from_tuples(renamedColumns)
 
@@ -230,10 +313,10 @@ def recolocaTerrColumns(df):
     columnList = list()
 
     for k in iTerr:
-        if k in groupKeys['idTerr']:
-            columnList.append(('idTerr', k))
+        if k in groupKeys["idTerr"]:
+            columnList.append(("idTerr", k))
 
-    for g in ['idProc', 'datosTerr', 'numPersElegidas', 'votCand']:
+    for g in ["idProc", "datosTerr", "numPersElegidas", "votCand"]:
         if g in groupKeys:
             columnList = columnList + [(g, x) for x in groupKeys[g]]
 
@@ -255,20 +338,26 @@ def getExtraInfo(reselect):
     """
     result = dict()
 
-    if 'datosMunic' in reselect:
-        dfwrk = reselect['datosMunic']
-        result['municData'] = dfwrk[dfwrk['CDIS'] == 99][['CPRO', 'CMUN', 'codPJ', 'codDistrElect', 'nomMunic']]
-        result['municDistrData'] = dfwrk[dfwrk['CDIS'] != 99][
-            ['CPRO', 'CMUN', 'CDIS', 'nomMunic']].rename({'nomMunic': 'nomDistr'}, axis=1)
+    if "datosMunic" in reselect:
+        dfwrk = reselect["datosMunic"]
+        result["municData"] = dfwrk[dfwrk["CDIS"] == 99][
+            ["CPRO", "CMUN", "codPJ", "codDistrElect", "nomMunic"]
+        ]
+        result["municDistrData"] = dfwrk[dfwrk["CDIS"] != 99][
+            ["CPRO", "CMUN", "CDIS", "nomMunic"]
+        ].rename({"nomMunic": "nomDistr"}, axis=1)
 
-    if 'datosSupMunic' in reselect:
-        dfwrk = reselect['datosSupMunic']
-        result['provData'] = dfwrk[dfwrk['CPRO'] != 99][['CPRO', 'nomAmbito']].rename({'nomAmbito': 'nomProv'},
-                                                                                      axis=1)
-        result['autData'] = dfwrk[(dfwrk['CPRO'] == 99) & (dfwrk['CCA'] != 99)][['CCA', 'nomAmbito']].rename(
-            {'nomAmbito': 'nomAut'}, axis=1)
-        result['totData'] = dfwrk[dfwrk['CCA'] == 99][['CCA', 'nomAmbito']].rename({'nomAmbito': 'nomTot'},
-                                                                                   axis=1)
+    if "datosSupMunic" in reselect:
+        dfwrk = reselect["datosSupMunic"]
+        result["provData"] = dfwrk[dfwrk["CPRO"] != 99][["CPRO", "nomAmbito"]].rename(
+            {"nomAmbito": "nomProv"}, axis=1
+        )
+        result["autData"] = dfwrk[(dfwrk["CPRO"] == 99) & (dfwrk["CCA"] != 99)][
+            ["CCA", "nomAmbito"]
+        ].rename({"nomAmbito": "nomAut"}, axis=1)
+        result["totData"] = dfwrk[dfwrk["CCA"] == 99][["CCA", "nomAmbito"]].rename(
+            {"nomAmbito": "nomTot"}, axis=1
+        )
 
     return result
 
@@ -278,6 +367,6 @@ def getExtraInfo(reselect):
 if __name__ == "__main__":
     from electSpain.MinInt.fileZIP import readFileZIP
 
-    resAux = readFileZIP('/home/calba/Datasets/Elec/Congreso/02201512_MESA.zip')
+    resAux = readFileZIP("/home/calba/Datasets/Elec/Congreso/02201512_MESA.zip")
 
     aplanaResultados(resAux)

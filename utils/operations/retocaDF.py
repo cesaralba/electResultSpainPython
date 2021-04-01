@@ -6,12 +6,15 @@ from utils.zipfiles import fileOpener
 from .retocaDFschemas import errorFixSchema, transformDFschema, validatorDFschema
 
 SEPARATOR = "\n- "
-SINGLECOLTRANSFORMNAMES = {'2numeric', 'upper', 'lower'}
+SINGLECOLTRANSFORMNAMES = {"2numeric", "upper", "lower"}
 
 
 # TODO: Cambiar los print por logging
 
-def readFileAndValidateSchema(fname, schema=None, semanticValidator=None, *args, **kwargs):
+
+def readFileAndValidateSchema(
+    fname, schema=None, semanticValidator=None, *args, **kwargs
+):
     with fileOpener(fname, "r") as handle:
         operations = yaml.safe_load(handle)
 
@@ -25,7 +28,9 @@ def readFileAndValidateSchema(fname, schema=None, semanticValidator=None, *args,
 
 
 def readDFerrorFixFile(fname, df=None):
-    operations = readFileAndValidateSchema(fname, schema=errorFixSchema, semanticValidator=validateDFerrorFix, df=df)
+    operations = readFileAndValidateSchema(
+        fname, schema=errorFixSchema, semanticValidator=validateDFerrorFix, df=df
+    )
 
     if df is not None and not validateDFerrorFix(operations, df):
         raise ValueError(f"readDFerrorFixFile: incorrect fixes on {fname}")
@@ -40,15 +45,20 @@ def validateDFerrorFix(errorDataFix, df):
     badRules = []
 
     for fix in errorDataFix:
-        reqSections = {'condition', 'fix'}
+        reqSections = {"condition", "fix"}
 
         ruleColumns = {col for k in reqSections for col in fix[k].keys()}
         unknownCols = checkColList(ruleColumns, df=df)
         if unknownCols:
-            badRules.append("errors on fix '%s'. Unknown columns: %s " % (fix, ",".join(sorted(unknownCols))))
+            badRules.append(
+                "errors on fix '%s'. Unknown columns: %s "
+                % (fix, ",".join(sorted(unknownCols)))
+            )
 
     if badRules:
-        raise KeyError(f"validateDFerrorFix: error on fixes:{SEPARATOR}{SEPARATOR.join(badRules)}")
+        raise KeyError(
+            f"validateDFerrorFix: error on fixes:{SEPARATOR}{SEPARATOR.join(badRules)}"
+        )
 
     return True
 
@@ -66,14 +76,18 @@ def applyDFerrorFix(df, fixesList):
 
     for rule in fixesList:
         # https://stackoverflow.com/a/34162576
-        condition = rule['condition']
-        fields2fix = rule['fix']
+        condition = rule["condition"]
+        fields2fix = rule["fix"]
         filterCond = pd.Series(condition)
         condList = (df[list(condition)] == filterCond).all(axis=1)
 
         if df[condList].shape[0] > 0:
-            print(f"Condition: {condition} -> Fix: {fields2fix}. Applied to {df[condList].shape[0]} row(s)")
-            df[condList] = df[condList].apply(lambda x, fieldList=fields2fix: fixer(x, fieldList), axis=1)
+            print(
+                f"Condition: {condition} -> Fix: {fields2fix}. Applied to {df[condList].shape[0]} row(s)"
+            )
+            df[condList] = df[condList].apply(
+                lambda x, fieldList=fields2fix: fixer(x, fieldList), axis=1
+            )
 
     return df
 
@@ -102,10 +116,12 @@ def validateDFtransform(operations, df):
             unknownCols = set()
             alreadyExistingCols = set()
 
-            prefix = params.get('prefix', None)
+            prefix = params.get("prefix", None)
 
-            if prefix:  # We are adding new columns so we must check new ones aren't already there
-                for col in params.get('cols', []):
+            if (
+                prefix
+            ):  # We are adding new columns so we must check new ones aren't already there
+                for col in params.get("cols", []):
                     newCol = prefix + col
                     if col not in currCols:
                         unknownCols.add(col)
@@ -115,12 +131,12 @@ def validateDFtransform(operations, df):
                         continue
                     currCols.add(newCol)
             else:  # Just check columns exist
-                unknownCols = checkColList(params.get('cols', []), colset=currCols)
+                unknownCols = checkColList(params.get("cols", []), colset=currCols)
 
             if unknownCols.union(alreadyExistingCols):
-                msg = f'Problem with transform {op}. Unknown columns {sorted(unknownCols)}. Already existing columns: {sorted(alreadyExistingCols)}'
+                msg = f"Problem with transform {op}. Unknown columns {sorted(unknownCols)}. Already existing columns: {sorted(alreadyExistingCols)}"
                 badOps.append(msg)
-        elif manip == 'concat':
+        elif manip == "concat":
             badConcats = list()
 
             for concat in params.items():
@@ -139,7 +155,7 @@ def validateDFtransform(operations, df):
                     flag = True
 
                 if flag:
-                    msg = f'concat: {concat}. Already existing column: {sorted(alreadyExistingCols)}. Unknown columns {sorted(unknownCols)}.'
+                    msg = f"concat: {concat}. Already existing column: {sorted(alreadyExistingCols)}. Unknown columns {sorted(unknownCols)}."
                     badConcats.append(msg)
                     continue
 
@@ -151,7 +167,9 @@ def validateDFtransform(operations, df):
             print(f"validateDFtransform: operacion desconocida '{manip}': {op}")
 
     if badOps:
-        raise ValueError(f"validateDFtransform: Problems with some transforms:{SEPARATOR}{SEPARATOR.join(badOps)}")
+        raise ValueError(
+            f"validateDFtransform: Problems with some transforms:{SEPARATOR}{SEPARATOR.join(badOps)}"
+        )
 
     return True
 
@@ -166,8 +184,8 @@ def applyDFtransforms(df, operations):
         manip, params = list(op.items())[0]
 
         if manip in SINGLECOLTRANSFORMNAMES:
-            prefix = params.get('prefix', None)
-            for col in params.get('cols', []):
+            prefix = params.get("prefix", None)
+            for col in params.get("cols", []):
                 newCol = col if prefix is None else (prefix + col)
 
                 if manip == "2numeric":
@@ -177,9 +195,11 @@ def applyDFtransforms(df, operations):
                 elif manip == "lower":
                     df[newCol] = df[col].str.lower()
 
-        elif manip == 'concat':
+        elif manip == "concat":
             for newCol, cols2add in params.items():
-                nameMerger = lambda x, colList=cols2add: "".join([x[label] for label in colList])
+                nameMerger = lambda x, colList=cols2add: "".join(
+                    [x[label] for label in colList]
+                )
                 df[newCol] = df.apply(nameMerger, axis=1)
         else:
             print(f"applyDFtransforms: operación desconocida '{manip}': {op}")
@@ -205,11 +225,15 @@ def validateDFvalidator(checks, df):
         unknownCols = checkColList(pair, df=df)
 
         if unknownCols:
-            msg = f'Problem with validator {pair}. Unknown columns {sorted(unknownCols)}.'
+            msg = (
+                f"Problem with validator {pair}. Unknown columns {sorted(unknownCols)}."
+            )
             badPairs.append(msg)
 
     if badPairs:
-        raise ValueError(f"validateDFvalidator: Problems with some validators:{SEPARATOR}{SEPARATOR.join(badPairs)}")
+        raise ValueError(
+            f"validateDFvalidator: Problems with some validators:{SEPARATOR}{SEPARATOR.join(badPairs)}"
+        )
 
 
 # TODO: Esto cambiará si se hacen más tipos de validaciones pero de momento tira así
@@ -227,27 +251,29 @@ def passDFvalidators(df, checks, **kwargs):
         if soloC.nunique() == len(subCyN.drop_duplicates()):
             continue
 
-        failedPair = {'pair': [c, n], 'combs': []}
+        failedPair = {"pair": [c, n], "combs": []}
         pairCounts = df[[c, n]].drop_duplicates()[c].value_counts()
-        claveProblem = pairCounts[pairCounts > 1].reset_index()['index']
+        claveProblem = pairCounts[pairCounts > 1].reset_index()["index"]
         for cp in claveProblem:
-            comb2add = {'claveIDX': c, 'claveVAL': n, 'valorIDX': cp}
+            comb2add = {"claveIDX": c, "claveVAL": n, "valorIDX": cp}
             subconjunto = df[df[c] == cp]
             valorCounts = subconjunto[n].value_counts()
             nombresProb = valorCounts.to_dict()
-            comb2add['cuentas'] = nombresProb
+            comb2add["cuentas"] = nombresProb
 
             valorMax = valorCounts.max()
 
             if valorMax != 1:
                 valorMayoritario = valorCounts[valorCounts == valorMax].index.tolist()
-                comb2add['valorMayoria'] = valorMayoritario
-                subconjuntoDivergente = subconjunto[~(subconjunto[n].isin(valorMayoritario))]
-                comb2add['divergentes'] = subconjuntoDivergente
+                comb2add["valorMayoria"] = valorMayoritario
+                subconjuntoDivergente = subconjunto[
+                    ~(subconjunto[n].isin(valorMayoritario))
+                ]
+                comb2add["divergentes"] = subconjuntoDivergente
             else:
-                comb2add['divergentes'] = subconjunto
+                comb2add["divergentes"] = subconjunto
 
-            failedPair['combs'].append(comb2add)
+            failedPair["combs"].append(comb2add)
 
         result.append(failedPair)
 

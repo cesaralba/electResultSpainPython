@@ -13,21 +13,69 @@ from scipy.sparse import dok_matrix
 
 from seccCensales.seccCensales import leeContornoSeccionesCensales, agrupaContornos
 
-secNIV = ['CCAA', 'PRO', 'MUN', 'DIS', 'SEC']
+secNIV = ["CCAA", "PRO", "MUN", "DIS", "SEC"]
 # secNIV = ['CCAA', 'PRO']
 
-resultBase = {'PAIS': {'claveAgr': None},
-              'CCAA': {'claveAgr': 'CCA', 'extraCols': ['NCA', 'nCCA']},
-              'PRO': {'claveAgr': 'nCPRO', 'extraCols': ['CCA', 'NCA', 'NPRO', 'nCCA', 'nCPRO']},
-              'MUN': {'claveAgr': 'CUMUN',
-                      'extraCols': ['CCA', 'nCPRO', 'CMUN', 'NCA', 'NPRO', 'NMUN', 'nCCA', 'nCPRO', 'nCMUN', 'nCUMUN']},
-              'DIS': {'claveAgr': 'CUDIS',
-                      'extraCols': ['CCA', 'nCPRO', 'CMUN', 'CDIS', 'CUMUN', 'NCA', 'NPRO', 'NMUN', 'nCCA', 'nCPRO',
-                                    'nCMUN', 'codDistr', 'nCUMUN', 'nCUDIS']},
-              'SEC': {'claveAgr': 'CUSEC',
-                      'extraCols': ['CCA', 'nCPRO', 'CMUN', 'CDIS', 'CUMUN', 'CUDIS', 'NCA', 'NPRO', 'NMUN', 'nCCA',
-                                    'nCPRO', 'nCMUN', 'codDistr', 'nCUMUN', 'nCUDIS', 'nCUSEC']}
-              }
+resultBase = {
+    "PAIS": {"claveAgr": None},
+    "CCAA": {"claveAgr": "CCA", "extraCols": ["NCA", "nCCA"]},
+    "PRO": {"claveAgr": "nCPRO", "extraCols": ["CCA", "NCA", "NPRO", "nCCA", "nCPRO"]},
+    "MUN": {
+        "claveAgr": "CUMUN",
+        "extraCols": [
+            "CCA",
+            "nCPRO",
+            "CMUN",
+            "NCA",
+            "NPRO",
+            "NMUN",
+            "nCCA",
+            "nCPRO",
+            "nCMUN",
+            "nCUMUN",
+        ],
+    },
+    "DIS": {
+        "claveAgr": "CUDIS",
+        "extraCols": [
+            "CCA",
+            "nCPRO",
+            "CMUN",
+            "CDIS",
+            "CUMUN",
+            "NCA",
+            "NPRO",
+            "NMUN",
+            "nCCA",
+            "nCPRO",
+            "nCMUN",
+            "codDistr",
+            "nCUMUN",
+            "nCUDIS",
+        ],
+    },
+    "SEC": {
+        "claveAgr": "CUSEC",
+        "extraCols": [
+            "CCA",
+            "nCPRO",
+            "CMUN",
+            "CDIS",
+            "CUMUN",
+            "CUDIS",
+            "NCA",
+            "NPRO",
+            "NMUN",
+            "nCCA",
+            "nCPRO",
+            "nCMUN",
+            "codDistr",
+            "nCUMUN",
+            "nCUDIS",
+            "nCUSEC",
+        ],
+    },
+}
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -37,16 +85,14 @@ ch.setLevel(logging.DEBUG)
 
 # create formatter
 formatter = logging.Formatter(
-    '%(asctime)s [%(process)d:@%(name)s %(levelname)s %(relativeCreated)12dms]: %(message)s')
+    "%(asctime)s [%(process)d:@%(name)s %(levelname)s %(relativeCreated)12dms]: %(message)s"
+)
 
 # add formatter to ch
 ch.setFormatter(formatter)
 
 # add ch to logger
 logger.addHandler(ch)
-
-
-
 
 
 def creaMatriz(df, clave=None, matricesMR=None):
@@ -64,12 +110,12 @@ def creaMatriz(df, clave=None, matricesMR=None):
 
     idx = df.index.to_list()
     ridx = list(range(dimdf))
-    estads = {'simetria': 0, 'matriz': 0, 'inters': 0}
+    estads = {"simetria": 0, "matriz": 0, "inters": 0}
 
     for ix, iy in product(ridx, ridx):
 
         if iy < ix:
-            estads['simetria'] += 1
+            estads["simetria"] += 1
             continue
 
         x = idx[ix]
@@ -85,10 +131,10 @@ def creaMatriz(df, clave=None, matricesMR=None):
                     flag = True
                     break
             if flag:
-                estads['matriz'] += 1
+                estads["matriz"] += 1
                 continue
 
-        estads['inters'] += 1
+        estads["inters"] += 1
         g0 = d0.geometry
         g1 = d1.geometry
 
@@ -111,10 +157,10 @@ def creaMatrizJoblib(df, clave=None, matricesMR=None, JLconfig=None):
 
     if JLconfig is None:
         JLconfig = {}
-    configParallel = {'verbose': 20}
+    configParallel = {"verbose": 20}
     # TODO: Control de calidad con los parámetros
-    configParallel['n_jobs'] = JLconfig.get('nproc', 2)
-    configParallel['prefer'] = JLconfig.get('joblibmode', 'threads')
+    configParallel["n_jobs"] = JLconfig.get("nproc", 2)
+    configParallel["prefer"] = JLconfig.get("joblibmode", "threads")
 
     dimdf = len(df)
     # matriz = np.zeros_like(np.arange(dimdf * dimdf).reshape((dimdf, dimdf)), dtype=bool)
@@ -149,7 +195,9 @@ def creaMatrizJoblib(df, clave=None, matricesMR=None, JLconfig=None):
         if g0.intersects(g1):
             return (ix, iy)
 
-    resultJL = Parallel(**configParallel)(delayed(checkAdjacency)(x, y) for x, y in product(ridx, ridx))
+    resultJL = Parallel(**configParallel)(
+        delayed(checkAdjacency)(x, y) for x, y in product(ridx, ridx)
+    )
 
     matriz = dok_matrix((dimdf, dimdf), dtype=bool)
     for x in resultJL:
@@ -176,16 +224,20 @@ def preparaAgrupacionConts(df, listaNiveles=secNIV):
     result = {k: resultBase[k] for k in clavesAUsar}
     # Prepara los agregados de contornos y datos auxiliares
     for k in clavesAUsar:
-        aux = agrupaContornos(df, claveAgr=result[k]['claveAgr'], extraCols=result[k]['extraCols'])
-        aux['idx'] = range(len(aux))
+        aux = agrupaContornos(
+            df, claveAgr=result[k]["claveAgr"], extraCols=result[k]["extraCols"]
+        )
+        aux["idx"] = range(len(aux))
 
-        if result[k].get('nSUP', None):
-            supLevel = result[k]['nSUP']
-            kSupLevel = result[supLevel]['claveAgr']
+        if result[k].get("nSUP", None):
+            supLevel = result[k]["nSUP"]
+            kSupLevel = result[supLevel]["claveAgr"]
 
-            result[supLevel]['sup2k'] = aux.reset_index().groupby(kSupLevel)[result[k]['claveAgr']].apply(list)
+            result[supLevel]["sup2k"] = (
+                aux.reset_index().groupby(kSupLevel)[result[k]["claveAgr"]].apply(list)
+            )
 
-        result[k]['contAgr'] = aux
+        result[k]["contAgr"] = aux
 
     return result
 
@@ -200,15 +252,23 @@ def vecinos2DF(resVecinos, datos):
     :return: diccionario de DF dispersos. Los DF corresponden a las adyacencias al nivel indicado y tienen como índice
     el de los DF en datos.
     """
-    auxMat = {k: dok_matrix((len(datos[k]['contAgr']), len(datos[k]['contAgr'])), dtype=bool) for k in resVecinos}
+    auxMat = {
+        k: dok_matrix((len(datos[k]["contAgr"]), len(datos[k]["contAgr"])), dtype=bool)
+        for k in resVecinos
+    }
     result = dict()
 
     for k, sols in resVecinos.items():
         print(k, len(sols))
         for s in sols:
             auxMat[k][s[0], s[1]] = True
-        result[k] = pd.SparseDataFrame(auxMat[k], index=datos[k]['contAgr'].index, columns=datos[k]['contAgr'].index,
-                                       dtype=bool, default_fill_value=False)
+        result[k] = pd.SparseDataFrame(
+            auxMat[k],
+            index=datos[k]["contAgr"].index,
+            columns=datos[k]["contAgr"].index,
+            dtype=bool,
+            default_fill_value=False,
+        )
 
     return result
 
@@ -225,8 +285,9 @@ def setDFLabels(df, datos, clave, etiqueta):
 
 
     """
-    return df.set_axis(datos[clave]['contAgr'][etiqueta], axis=1, inplace=False).set_axis(
-        datos[clave]['contAgr'][etiqueta], axis=0, inplace=False)
+    return df.set_axis(
+        datos[clave]["contAgr"][etiqueta], axis=1, inplace=False
+    ).set_axis(datos[clave]["contAgr"][etiqueta], axis=0, inplace=False)
 
 
 def controlCalidad(df):
@@ -236,23 +297,30 @@ def controlCalidad(df):
     :return:
     """
     # Encuentra nombres mal puestos
-    reCA = pd.DataFrame(df.groupby('CCA').apply(lambda x: x['NCA'].value_counts()))
-    print("Comunidades\n", reCA[(reCA.droplevel(1, axis=0).index.duplicated(keep=False))])
+    reCA = pd.DataFrame(df.groupby("CCA").apply(lambda x: x["NCA"].value_counts()))
+    print(
+        "Comunidades\n", reCA[(reCA.droplevel(1, axis=0).index.duplicated(keep=False))]
+    )
 
-    reProv = pd.DataFrame(df.groupby('nCPRO').apply(lambda x: x['NPRO'].value_counts()))
-    print("Provincias\n", reProv[(reProv.droplevel(1, axis=0).index.duplicated(keep=False))])
+    reProv = pd.DataFrame(df.groupby("nCPRO").apply(lambda x: x["NPRO"].value_counts()))
+    print(
+        "Provincias\n",
+        reProv[(reProv.droplevel(1, axis=0).index.duplicated(keep=False))],
+    )
 
-    reMun = pd.DataFrame(df.groupby('CUMUN').apply(lambda x: x['NMUN'].value_counts()))
-    print("Municipios\n", reMun[(reMun.droplevel(1, axis=0).index.duplicated(keep=False))])
+    reMun = pd.DataFrame(df.groupby("CUMUN").apply(lambda x: x["NMUN"].value_counts()))
+    print(
+        "Municipios\n", reMun[(reMun.droplevel(1, axis=0).index.duplicated(keep=False))]
+    )
 
 
 def procesaArgumentos():
     parser = ArgumentParser()
 
-    parser.add('-i', dest='infile', type=str, required=True)
-    parser.add('-o', dest='outfile', type=str, required=True)
+    parser.add("-i", dest="infile", type=str, required=True)
+    parser.add("-o", dest="outfile", type=str, required=True)
 
-    parser.add('-l', dest='categs', type=str, required=True)
+    parser.add("-l", dest="categs", type=str, required=True)
 
     args = parser.parse_args()
 
@@ -272,6 +340,6 @@ if __name__ == "__main__":
     gdf = leeContornoSeccionesCensales(args.infile)
 
     contAgs = preparaAgrupacionConts(gdf)
-    matricesAdj = creaMatrizRec(contAgs, ['CCAA', 'PRO', 'MUN', 'DIS', 'SEC'])
+    matricesAdj = creaMatrizRec(contAgs, ["CCAA", "PRO", "MUN", "DIS", "SEC"])
 
 pass

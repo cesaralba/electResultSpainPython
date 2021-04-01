@@ -5,7 +5,6 @@ from .deepdict import serie2deepdict
 
 
 class traducPartidos(object):
-
     def __init__(self):
         self.dir = dict()
         self.inv = defaultdict(list)
@@ -38,13 +37,19 @@ class traducPartidos(object):
     def __repr__(self):
         result = ""
         if self.dir:
-            result += (" dir: " + ", ".join(["  '%s' -> '%s'" % (k, v) for k, v in self.dir.items()]))
+            result += " dir: " + ", ".join(
+                ["  '%s' -> '%s'" % (k, v) for k, v in self.dir.items()]
+            )
         else:
             result += " dir: no trads"
 
         if self.inv:
-            result += (" inv: " + ", ".join(["  '%s' <- [%s]" % (k, ", ".join(sorted(v))) for k, v in self.inv.items()])
-                       )
+            result += " inv: " + ", ".join(
+                [
+                    "  '%s' <- [%s]" % (k, ", ".join(sorted(v)))
+                    for k, v in self.inv.items()
+                ]
+            )
         else:
             result += " inv: no trads"
 
@@ -77,8 +82,10 @@ class agrupaTraduccionesFB(object):
         if len(agrupadores) == 0:
             raise ValueError("AgrupaTraducciones: no se han indicado agrupadores")
         if len(agrupadores) > len(aagrupar):
-            raise ValueError("AgrupaTraducciones: se han indicado mas agrupadores (%i) que clases a agrupar(%i)" % (
-                len(agrupadores), len(aagrupar)))
+            raise ValueError(
+                "AgrupaTraducciones: se han indicado mas agrupadores (%i) que clases a agrupar(%i)"
+                % (len(agrupadores), len(aagrupar))
+            )
 
         self.contenedores = agrupadores
         self.clases = aagrupar
@@ -154,7 +161,11 @@ def asignaTradsKS(contenedores, clases, knownTrad=None):
     """
 
     def findPosItems(cap, itemlist):
-        return sorted([(k, v) for k, v in itemlist if v <= cap], key=lambda kv: kv[1], reverse=True)
+        return sorted(
+            [(k, v) for k, v in itemlist if v <= cap],
+            key=lambda kv: kv[1],
+            reverse=True,
+        )
 
     def ks(capacidad, carga, elementos):
         if capacidad == 0:
@@ -166,7 +177,9 @@ def asignaTradsKS(contenedores, clases, knownTrad=None):
             nuevaCarga.append((e, v))
             nuevaCapacidad = capacidad - v
 
-            nuevosElementos = findPosItems(nuevaCapacidad, [(k, v) for k, v in elementos if k != e])
+            nuevosElementos = findPosItems(
+                nuevaCapacidad, [(k, v) for k, v in elementos if k != e]
+            )
 
             resKS = ks(nuevaCapacidad, nuevaCarga, nuevosElementos)
             if resKS is not None:
@@ -180,10 +193,14 @@ def asignaTradsKS(contenedores, clases, knownTrad=None):
         result = traducPartidos()
 
     dicCont = sorted(serie2deepdict(contenedores).items(), key=lambda kv: kv[1])
-    dicClass = sorted(serie2deepdict(clases).items(), key=lambda kv: kv[1], reverse=True)
+    dicClass = sorted(
+        serie2deepdict(clases).items(), key=lambda kv: kv[1], reverse=True
+    )
 
     for kagg, v in dicCont:
-        elemList = [(k, v) for k, v in dicClass if k not in list(result.listaPartidos())]
+        elemList = [
+            (k, v) for k, v in dicClass if k not in list(result.listaPartidos())
+        ]
 
         resKS = ks(v, [], elemList)
         result.nuevaTrad([k for k, v in resKS], kagg)

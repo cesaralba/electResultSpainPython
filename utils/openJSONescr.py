@@ -11,7 +11,7 @@ from babel.numbers import parse_decimal, decimal
 
 
 def ambito2campos(codambito):
-    REambito = r'(?P<codAut>\d{2})(?P<codProv>\d{2})(?P<codMun>\d{3})(?P<codDistr>\d{2})(?P<codSeccion>\d{2})?'
+    REambito = r"(?P<codAut>\d{2})(?P<codProv>\d{2})(?P<codMun>\d{3})(?P<codDistr>\d{2})(?P<codSeccion>\d{2})?"
 
     ambMatch = re.match(REambito, codambito)
 
@@ -21,36 +21,36 @@ def ambito2campos(codambito):
 
 
 def mdhm2timestamp(valmdhm, year=2019):
-    REmdhm = r'(?P<month>\d{2})(?P<day>\d{2})(?P<hour>\d{2})(?P<minute>\d{2})'
+    REmdhm = r"(?P<month>\d{2})(?P<day>\d{2})(?P<hour>\d{2})(?P<minute>\d{2})"
 
     ambMDHM = re.match(REmdhm, valmdhm)
 
     result = {k: int(v) for k, v in ambMDHM.groupdict().items()}
-    result['year'] = year
+    result["year"] = year
 
     return datetime(**result)
 
 
 def porc2val(valor):
-    REnumero = r'(?P<valor>[+-]?\d+(,\d+)?)%'
+    REnumero = r"(?P<valor>[+-]?\d+(,\d+)?)%"
 
     valMatch = re.match(REnumero, valor)
 
     result = valMatch.groupdict()
 
-    return parse_decimal(result['valor'], locale='de')
+    return parse_decimal(result["valor"], locale="de")
 
 
 def totales2dict(totales):
-    keyToexclude = ['gancodpar']
+    keyToexclude = ["gancodpar"]
 
     result = dict()
 
     for k in totales:
-        if k in keyToexclude or k.startswith('d'):
+        if k in keyToexclude or k.startswith("d"):
             continue
 
-        if k.startswith('p') and k != 'padron':
+        if k.startswith("p") and k != "padron":
             result[k] = porc2val(totales[k])
             #    print("Porcentaje", k, totales[k])
         else:
@@ -60,33 +60,56 @@ def totales2dict(totales):
 
 
 def partido2dict(datopartido, periodo, nomenclator=None):
-    keyToexclude = ['codpar']
+    keyToexclude = ["codpar"]
 
     result = dict()
 
     for k in datopartido:
-        if k in keyToexclude or k.startswith('d'):
+        if k in keyToexclude or k.startswith("d"):
             continue
 
-        if k.startswith('p') and k != 'padron':
+        if k.startswith("p") and k != "padron":
             result[k] = porc2val(datopartido[k])
             #    print("Porcentaje", k, totales[k])
         else:
             result[k] = int(datopartido[k])
 
     if nomenclator:
-        result['siglapar'] = nomenclator['partidos'][periodo][datopartido['codpar']]['siglas']
+        result["siglapar"] = nomenclator["partidos"][periodo][datopartido["codpar"]][
+            "siglas"
+        ]
     return result
 
 
 def process_cli_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--base-dir', dest='basedir', action='store', help='location of test results',
-                        required=True, default=".")
-    parser.add_argument('-o', '--output-file', dest='destfile', help='output file name', required=True)
-    parser.add_argument('-n', '--nomenclator', dest='nomenclator', help='lista de entidades (partidos, lugares...)',
-                        required=False)
-    parser.add_argument('-y', '--year', dest='year', help='year of election', required=False, default=2019)
+    parser.add_argument(
+        "-d",
+        "--base-dir",
+        dest="basedir",
+        action="store",
+        help="location of test results",
+        required=True,
+        default=".",
+    )
+    parser.add_argument(
+        "-o", "--output-file", dest="destfile", help="output file name", required=True
+    )
+    parser.add_argument(
+        "-n",
+        "--nomenclator",
+        dest="nomenclator",
+        help="lista de entidades (partidos, lugares...)",
+        required=False,
+    )
+    parser.add_argument(
+        "-y",
+        "--year",
+        dest="year",
+        help="year of election",
+        required=False,
+        default=2019,
+    )
 
     args = vars(parser.parse_args())
 
@@ -150,17 +173,17 @@ def processNomenclator(fname):
     :param fname:
     :return:
     """
-    result = {'partidos': {}, 'ambitos': {}}
+    result = {"partidos": {}, "ambitos": {}}
 
     data = readJSONfile(fname)
 
-    result['constantes'] = {int(k): v for k, v in data['constantes']['level'].items()}
-    result['ambitos'] = {x['c']: x for x in data['ambitos']['co']}
-    for amb in result['ambitos']:
-        result['ambitos'][amb].update(ambito2campos(amb))
+    result["constantes"] = {int(k): v for k, v in data["constantes"]["level"].items()}
+    result["ambitos"] = {x["c"]: x for x in data["ambitos"]["co"]}
+    for amb in result["ambitos"]:
+        result["ambitos"][amb].update(ambito2campos(amb))
 
-    for per in data['partidos']['co']:
-        result['partidos'][per] = {p['codpar']: p for p in data['partidos']['co'][per]}
+    for per in data["partidos"]["co"]:
+        result["partidos"][per] = {p["codpar"]: p for p in data["partidos"]["co"][per]}
 
     return result
 
@@ -214,53 +237,57 @@ def processResultados(fname, year=2019, nomenclator=None):
     :return:
     """
 
-    auxTotales = {'ant': {}, 'act': {}}
+    auxTotales = {"ant": {}, "act": {}}
 
     data = readJSONfile(fname)
-    result = {'partidos': {'ant': {}, 'act': {}}}
-    result['totales'] = {'ant': {}, 'act': {}}
-    result['idTerr'] = {'amb': data['amb']}
-    result['idTerr'].update(ambito2campos(data['amb']))
+    result = {"partidos": {"ant": {}, "act": {}}}
+    result["totales"] = {"ant": {}, "act": {}}
+    result["idTerr"] = {"amb": data["amb"]}
+    result["idTerr"].update(ambito2campos(data["amb"]))
     if nomenclator:
-        result['idTerr']['nombre'] = nomenclator['ambitos'][data['amb']]['n']
-        result['idTerr']['tipo'] = nomenclator['constantes'][nomenclator['ambitos'][data['amb']]['l']]
+        result["idTerr"]["nombre"] = nomenclator["ambitos"][data["amb"]]["n"]
+        result["idTerr"]["tipo"] = nomenclator["constantes"][
+            nomenclator["ambitos"][data["amb"]]["l"]
+        ]
 
-    result['metadata'] = {'numact': data['numact'], 'datesample': mdhm2timestamp(data['mdhm'], year=year),
-                          'filename': fname
-                          }
+    result["metadata"] = {
+        "numact": data["numact"],
+        "datesample": mdhm2timestamp(data["mdhm"], year=year),
+        "filename": fname,
+    }
 
-    for k in data['totales']:
-        auxTotales[k] = totales2dict(data['totales'][k])
+    for k in data["totales"]:
+        auxTotales[k] = totales2dict(data["totales"][k])
 
-    keysInAct = ['metota', 'centota']
+    keysInAct = ["metota", "centota"]
     keysInBoth = []
-    for k in auxTotales['act']:
-        if k in auxTotales['ant']:
+    for k in auxTotales["act"]:
+        if k in auxTotales["ant"]:
             keysInBoth.append(k)
         else:
             keysInAct.append(k)
 
     for k in keysInBoth:
         for per in auxTotales:
-            result['totales'][per][k] = auxTotales[per][k]
+            result["totales"][per][k] = auxTotales[per][k]
 
-    result['escrutinio'] = {k: auxTotales['act'][k] for k in keysInAct}
+    result["escrutinio"] = {k: auxTotales["act"][k] for k in keysInAct}
 
-    for part in data['partotabla']:
+    for part in data["partotabla"]:
         for per in part:
             datopart = part[per]
-            if datopart['codpar'] == '0000':
+            if datopart["codpar"] == "0000":
                 continue
             resultPart = partido2dict(datopart, per, nomenclator)
-            if 'siglapar' in resultPart:
-                labelPart = resultPart['siglapar']
-                resultPart.pop('siglapar')
+            if "siglapar" in resultPart:
+                labelPart = resultPart["siglapar"]
+                resultPart.pop("siglapar")
             else:
-                labelPart = datopart['codpar']
+                labelPart = datopart["codpar"]
             for cat, v in resultPart.items():
-                if cat not in result['partidos'][per]:
-                    result['partidos'][per][cat] = dict()
-                result['partidos'][per][cat][labelPart] = v
+                if cat not in result["partidos"][per]:
+                    result["partidos"][per][cat] = dict()
+                result["partidos"][per][cat][labelPart] = v
 
     return result
 
@@ -275,13 +302,13 @@ def processResultsDir(dirbase, **kwargs):
 
         for fich in os.listdir(subdir):
 
-            if not fich.endswith('.json'):
+            if not fich.endswith(".json"):
                 continue
             file2work = os.path.join(subdir, fich)
 
             aux = processResultados(file2work, **kwargs)
 
-            result[aux['idTerr']['amb']][aux['metadata']['datesample']] = aux
+            result[aux["idTerr"]["amb"]][aux["metadata"]["datesample"]] = aux
 
     return result
 
@@ -313,8 +340,11 @@ def getDictKeys(dictList):
     return sorted(Counter(map(tuple, result)).keys())
 
 
-def colNames2String(df, sep='_'):
-    return [sep.join([field for field in col if field not in ('', np.nan)]) for col in df.columns.to_list()]
+def colNames2String(df, sep="_"):
+    return [
+        sep.join([field for field in col if field not in ("", np.nan)])
+        for col in df.columns.to_list()
+    ]
 
 
 def deepDict(dic, keys):
@@ -331,7 +361,12 @@ def deepDict(dic, keys):
 
 def getColTypes(valList, keyList, typeConverter=None):
     if typeConverter is None:
-        typeConverter = {str: np.object, int: pd.Int64Dtype(), decimal.Decimal: np.float64, datetime: np.datetime64}
+        typeConverter = {
+            str: np.object,
+            int: pd.Int64Dtype(),
+            decimal.Decimal: np.float64,
+            datetime: np.datetime64,
+        }
     aux = defaultdict(lambda: defaultdict(int))
     result = dict()
     for val in valList:
@@ -367,9 +402,9 @@ def padTupleList(myList, padItem=None):
 
 
 def createDataframe(bigDict):
-    auxAll = {(i, j): bigDict[i][j].copy()
-              for i in bigDict.keys()
-              for j in bigDict[i].keys()}
+    auxAll = {
+        (i, j): bigDict[i][j].copy() for i in bigDict.keys() for j in bigDict[i].keys()
+    }
 
     # print([(i, j) for i in bigDict.keys() for j in bigDict[i].keys()])
     # print(list(auxAll.keys()))
@@ -388,15 +423,23 @@ def createDataframe(bigDict):
     colTypes = getColTypes(auxAll.values(), colNames)
     auxColTypes = [colTypes[x] for x in colNames]
 
-    auxResult = pd.DataFrame(data=data2PD, index=pd.MultiIndex.from_tuples(filAll, names=['amb', 'tstamp']),
-                             columns=pd.MultiIndex.from_tuples(colNames), copy=True)
-    result = auxResult.astype(dict(zip(pd.MultiIndex.from_tuples(padTupleList(colNames, np.nan)), auxColTypes)),
-                              copy=True)
+    auxResult = pd.DataFrame(
+        data=data2PD,
+        index=pd.MultiIndex.from_tuples(filAll, names=["amb", "tstamp"]),
+        columns=pd.MultiIndex.from_tuples(colNames),
+        copy=True,
+    )
+    result = auxResult.astype(
+        dict(
+            zip(pd.MultiIndex.from_tuples(padTupleList(colNames, np.nan)), auxColTypes)
+        ),
+        copy=True,
+    )
 
     return result
 
 
-def df2Parquet(df, fname, sep='_'):
+def df2Parquet(df, fname, sep="_"):
     cols2retype = dict()
     dfColRenamed = df.copy()
     dfColRenamed.columns = pd.Index(colNames2String(df, sep=sep))
@@ -417,7 +460,7 @@ def df2Parquet(df, fname, sep='_'):
     dfColRetyped.to_parquet(fname)
 
 
-def parquet2DF(fname, sep='_'):
+def parquet2DF(fname, sep="_"):
     df = pd.read_parquet(fname)
 
     newCols = [tuple(x.split(sep)) for x in list(df.columns.to_list())]
@@ -428,27 +471,29 @@ def parquet2DF(fname, sep='_'):
 
 
 def ultEntrada(df):
-    return df.groupby('amb').tail(n=1)
+    return df.groupby("amb").tail(n=1)
 
 
 def main():
     args = process_cli_arguments()
 
-    if not os.path.isdir(args['basedir']):
-        print("Provided argument -d '%s' is not a directory" % args['basedir'])
+    if not os.path.isdir(args["basedir"]):
+        print("Provided argument -d '%s' is not a directory" % args["basedir"])
         exit(1)
 
-    sourcedir = os.path.relpath(args['basedir'])
+    sourcedir = os.path.relpath(args["basedir"])
 
     nomenclatorData = None
-    if 'nomenclator' in args and args['nomenclator'] is not None:
-        if os.path.isfile(args['nomenclator']):
-            nomenclatorData = processNomenclator(args['nomenclator'])
+    if "nomenclator" in args and args["nomenclator"] is not None:
+        if os.path.isfile(args["nomenclator"]):
+            nomenclatorData = processNomenclator(args["nomenclator"])
 
-    allMerged = processResultsDir(sourcedir, year=args['year'], nomenclator=nomenclatorData)
+    allMerged = processResultsDir(
+        sourcedir, year=args["year"], nomenclator=nomenclatorData
+    )
     allDF = createDataframe(allMerged)
 
-    df2Parquet(allDF, args['destfile'])
+    df2Parquet(allDF, args["destfile"])
 
 
 if __name__ == "__main__":
