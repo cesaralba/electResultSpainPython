@@ -46,7 +46,7 @@ def validateDFerrorFix(errorDataFix, df):
         unknownCols = checkColList(ruleColumns, df=df)
         if unknownCols:
             badRules.append("errors on fix '%s'. Unknown columns: %s " % (fix, ",".join(sorted(unknownCols))))
-            continue
+
     if badRules:
         raise KeyError(f"validateDFerrorFix: error on fixes:{SEPARATOR}{SEPARATOR.join(badRules)}")
 
@@ -68,8 +68,8 @@ def applyDFerrorFix(df, fixesList):
         # https://stackoverflow.com/a/34162576
         condition = rule['condition']
         fields2fix = rule['fix']
-        filter = pd.Series(condition)
-        condList = (df[list(condition)] == filter).all(axis=1)
+        filterCond = pd.Series(condition)
+        condList = (df[list(condition)] == filterCond).all(axis=1)
 
         if df[condList].shape[0] > 0:
             print(f"Condition: {condition} -> Fix: {fields2fix}. Applied to {df[condList].shape[0]} row(s)")
