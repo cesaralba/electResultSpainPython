@@ -2,7 +2,7 @@ import pandas as pd
 import yaml
 from jsonschema import validate, Draft7Validator
 
-#from utils.zipfiles import fileOpener
+from utils.zipfiles import fileOpener
 from .retocaDFschemas import errorFixSchema, transformDFschema, validatorDFschema
 
 SEPARATOR = "\n- "
@@ -27,9 +27,8 @@ def readFileAndValidateSchema(fname, schema=None, semanticValidator=None, *args,
 def readDFerrorFixFile(fname, df=None):
     operations = readFileAndValidateSchema(fname, schema=errorFixSchema, semanticValidator=validateDFerrorFix, df=df)
 
-    if df is not None:
-        if not validateDFerrorFix(operations, df):
-            raise ValueError(f"readDFerrorFixFile: incorrect fixes on {fname}")
+    if df is not None and not validateDFerrorFix(operations, df):
+        raise ValueError(f"readDFerrorFixFile: incorrect fixes on {fname}")
     return operations
 
 
@@ -192,9 +191,8 @@ def applyDFtransforms(df, operations):
 def readDFvalidatorFile(fname, df=None):
     checks = readFileAndValidateSchema(fname, validatorDFschema)
 
-    if df is not None:
-        if not validateDFvalidator(checks, df):
-            raise ValueError(f"readDFvalidatorFile: incorrect validations on {fname}")
+    if df is not None and not validateDFvalidator(checks, df):
+        raise ValueError(f"readDFvalidatorFile: incorrect validations on {fname}")
     return checks
 
 
@@ -258,6 +256,7 @@ def passDFvalidators(df, checks, **kwargs):
 
 
 def validatorResult2str(comps, df):
+    """ Aqui se mostrará algo cuando falle"""
     pass
 
 
