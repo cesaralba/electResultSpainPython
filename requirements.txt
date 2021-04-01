@@ -9,4 +9,6 @@ joblib
 babel
 scipy
 psutil
+pyyaml
+jsonschema
 pygeos

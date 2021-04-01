@@ -11,7 +11,12 @@ import pandas as pd
 import psutil
 from scipy.sparse import dok_matrix
 
+from utils.operations.retocaDF import applyDFtransforms, passDFvalidators, applyDFerrorFix
 from utils.zipfiles import fileOpener
+from seccCensales.operDF import manipSecCensales, validacionesSecCensales
+from seccCensales.fixINE import fixesINE
+
+#Fuente de datos: 
 
 secNIV = ['CCAA', 'PRO', 'MUN', 'DIS', 'SEC']
 # secNIV = ['CCAA', 'PRO']
@@ -51,7 +56,19 @@ def leeContornoSeccionesCensales(fname):
     logger.info("Loading SC file: %s", fname)
 
     baregdf = gpd.read_file(fname)
-    result = creaNumCols(baregdf, ['CCA', 'CPRO', 'CMUN', 'CDIS', 'CSEC', 'CUMUN', 'CUDIS', 'CUSEC'])
+
+    primPass = passDFvalidators(baregdf,validacionesSecCensales)
+    if primPass:
+        logger.error(f"Fichero: {fname}. Errores detectados. Aplicando arreglos.{primPass}")
+        fixedDF = applyDFerrorFix(baregdf, fixesINE)
+        segPass = passDFvalidators(baregdf,validacionesSecCensales)
+        if segPass:
+            logger.error(f"Fichero: {fname}. Errores detectados {segPass}")
+            raise ValueError(f"Problemas en fichero {fname}")
+    else:
+        fixedDF = baregdf
+    result = applyDFtransforms(fixedDF, manipSecCensales)
+    # result = creaNumCols(baregdf, ['CCA', 'CPRO', 'CMUN', 'CDIS', 'CSEC', 'CUMUN', 'CUDIS', 'CUSEC'])
     result['numcell'] = 1  # Se usa para contar secciones para agrupación mayor
 
     timeOut = time()
@@ -80,13 +97,14 @@ def agrupaContornos(df, claveAgr, extraCols=None):
 
 def creaNumCols(df, cols):
     auxCols = cols if checkList(cols) else [cols]
-    result = df.reset_index()
 
     indexCol = None
     if isinstance(df.index, pd.core.indexes.base.Index):
         indexCol = df.index.name
     elif isinstance(df.index, pd.core.indexes.multi.MultiIndex):
         indexCol = df.index.names
+
+    result = df.reset_index()
 
     for c in auxCols:
         if c in result.columns:
@@ -249,7 +267,7 @@ class seccionesCensales(object):
     def lazyLoad(self, permisivo=False):
         if self.gdf is None:
             self.gdf = leeContornoSeccionesCensales(self.fname)
-            self.controlCalidad(permisivo)
+            # self.controlCalidad(permisivo)
 
         return self.gdf
 
