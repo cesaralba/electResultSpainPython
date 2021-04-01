@@ -13,7 +13,7 @@ from electSpain.MinInt.fileDescriptions import (
 )
 from utils.zipfiles import unzipfile
 
-minIntPattern = "(:?.*/)?(\d{2})(\d{2})(\d{2})(\d{2})\.DAT"
+minIntPattern = r"(:?.*/)?(\d{2})(\d{2})(\d{2})(\d{2})\.DAT"
 
 
 def getFilenames(fileList):
