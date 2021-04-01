@@ -73,7 +73,7 @@ def applyDFerrorFix(df, fixesList):
 
         if df[condList].shape[0] > 0:
             print(f"Condition: {condition} -> Fix: {fields2fix}. Applied to {df[condList].shape[0]} row(s)")
-            df[condList] = df[condList].apply(lambda x,fieldList=fields2fix: fixer(x, fieldList), axis=1)
+            df[condList] = df[condList].apply(lambda x, fieldList=fields2fix: fixer(x, fieldList), axis=1)
 
     return df
 
@@ -81,9 +81,8 @@ def applyDFerrorFix(df, fixesList):
 def readDFtransformFile(fname, df=None):
     operations = readFileAndValidateSchema(fname, transformDFschema)
 
-    if df is not None:
-        if not validateDFtransform(operations, df):
-            raise ValueError(f"readDFtransformFile: incorrect fixes on {fname}")
+    if df is not None and not validateDFtransform(operations, df):
+        raise ValueError(f"readDFtransformFile: incorrect fixes on {fname}")
     return operations
 
 
@@ -180,7 +179,7 @@ def applyDFtransforms(df, operations):
 
         elif manip == 'concat':
             for newCol, cols2add in params.items():
-                nameMerger = lambda x,colList=cols2add: "".join([x[label] for label in colList])
+                nameMerger = lambda x, colList=cols2add: "".join([x[label] for label in colList])
                 df[newCol] = df.apply(nameMerger, axis=1)
         else:
             print(f"applyDFtransforms: operación desconocida '{manip}': {op}")
