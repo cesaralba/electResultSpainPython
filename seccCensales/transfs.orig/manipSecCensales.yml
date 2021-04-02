@@ -1,3 +1,4 @@
+---
 - 2numeric:
     prefix: n
     cols: [CCA, CPRO, CMUN, CDIS, CSEC, CUMUN, CUDIS, CUSEC, CCA]

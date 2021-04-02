@@ -134,7 +134,11 @@ def validateDFtransform(operations, df):
                 unknownCols = checkColList(params.get("cols", []), colset=currCols)
 
             if unknownCols.union(alreadyExistingCols):
-                msg = f"Problem with transform {op}. Unknown columns {sorted(unknownCols)}. Already existing columns: {sorted(alreadyExistingCols)}"
+                msg = (
+                    f"Problem with transform {op}. Unknown columns {sorted(unknownCols)}. "
+                    + f"Already existing columns: {sorted(alreadyExistingCols)}"
+                )
+
                 badOps.append(msg)
         elif manip == "concat":
             badConcats = list()
@@ -155,7 +159,11 @@ def validateDFtransform(operations, df):
                     flag = True
 
                 if flag:
-                    msg = f"concat: {concat}. Already existing column: {sorted(alreadyExistingCols)}. Unknown columns {sorted(unknownCols)}."
+                    msg = (
+                        f"concat: {concat}. Already existing column: {sorted(alreadyExistingCols)}. "
+                        + f"Unknown columns {sorted(unknownCols)}."
+                    )
+
                     badConcats.append(msg)
                     continue
 

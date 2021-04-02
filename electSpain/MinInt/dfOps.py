@@ -47,15 +47,9 @@ def uniformizaCands(datosCands):
     dfCand = datosCands[columnsCands]
     dfCandNac = datosCands[columnsCandsNac]
 
-    cands2Merge = (
-        dfCand.merge(
-            dfCandNac,
-            left_on=["tipoElec", "yearElec", "mesElec", "codCandAcumNac"],
-            right_on=["tipoElec", "yearElec", "mesElec", "codCand"],
-        )
-        .drop(columns=["codCand_y"])
-        .rename(columns={"codCand_x": "codCand"})
-    )
+    cands2Merge = (dfCand.merge(dfCandNac, left_on=["tipoElec", "yearElec", "mesElec", "codCandAcumNac"],
+                                right_on=["tipoElec", "yearElec", "mesElec", "codCand"], ).drop(
+        columns=["codCand_y"]).rename(columns={"codCand_x": "codCand"}))
 
     return cands2Merge
 
@@ -157,11 +151,7 @@ def aplanaResultados(reselect, columnaDato="votCand"):
         dfDatos = reselect[claveSinResult]
         actRemoval = [x for x in col2remove if x in dfDatos.columns]
 
-        dfDatosIndexed = (
-            dfDatos.set_index(clavesParaIndexar(dfDatos))
-            .drop(labels=actRemoval, axis=1)
-            .sort_index()
-        )
+        dfDatosIndexed = (dfDatos.set_index(clavesParaIndexar(dfDatos)).drop(labels=actRemoval, axis=1).sort_index())
         if colsControl[columnaDato] not in dfDatosIndexed:
             print(
                 "aplanaResultados: columna de control '%s' no est� en dataframe de datos '%s'"
@@ -200,62 +190,36 @@ def aplanaResultados(reselect, columnaDato="votCand"):
             )
 
         result[clave] = recolocaTerrColumns(
-            pd.concat([dfDatosIndexed, resultPlanos], axis=1).reset_index(
-                level=colsIDProc, col_level=1, col_fill="idProc"
-            )
-        )
+            pd.concat([dfDatosIndexed, resultPlanos], axis=1).reset_index(level=colsIDProc, col_level=1,
+                                                                          col_fill="idProc"))
 
     # Separa los dataframes "planos" nativos en otros con las entidades que contienen
     if "datosSupMunicResult" in result:
         clave = "datosSupMunicResult"
         auxDF = result[clave]
 
-        result["provResult"] = recolocaTerrColumns(
-            auxDF[~auxDF.index.isin(values=[99], level="nCPRO")]
-        )
+        result["provResult"] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[99], level="nCPRO")])
         result["autResult"] = recolocaTerrColumns(
-            auxDF[
-                auxDF.index.isin(values=[99], level="nCPRO")
-                & ~auxDF.index.isin(values=[99], level="nCCA")
-            ]
-        )
-        result["totResult"] = recolocaTerrColumns(
-            auxDF[auxDF.index.isin(values=[99], level="nCCA")]
-        )
+            auxDF[auxDF.index.isin(values=[99], level="nCPRO") & ~auxDF.index.isin(values=[99], level="nCCA")])
+        result["totResult"] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level="nCCA")])
 
     if "datosMunicResult" in result:
         clave = "datosMunicResult"
         auxDF = result[clave]
 
-        result["municResult"] = recolocaTerrColumns(
-            auxDF[auxDF.index.isin(values=[99], level="nCDIS")]
-        )
-        result["distrResult"] = recolocaTerrColumns(
-            auxDF[~auxDF.index.isin(values=[99], level="nCDIS")]
-        )
+        result["municResult"] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level="nCDIS")])
+        result["distrResult"] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[99], level="nCDIS")])
 
     if "datosMesasResult" in result:
         clave = "datosMesasResult"
         auxDF = result[clave]
 
-        result["mesaResult"] = recolocaTerrColumns(
-            auxDF[~auxDF.index.isin(values=[999], level="nCMUN")]
-        )
-        result["totCERA"] = recolocaTerrColumns(
-            auxDF[auxDF.index.isin(values=[99], level="nCCA")]
-        )
+        result["mesaResult"] = recolocaTerrColumns(auxDF[~auxDF.index.isin(values=[999], level="nCMUN")])
+        result["totCERA"] = recolocaTerrColumns(auxDF[auxDF.index.isin(values=[99], level="nCCA")])
         result["autCERA"] = recolocaTerrColumns(
-            auxDF[
-                auxDF.index.isin(values=[999], level="nCMUN")
-                & auxDF.index.isin(values=[99], level="nCPRO")
-            ]
-        )
+            auxDF[auxDF.index.isin(values=[999], level="nCMUN") & auxDF.index.isin(values=[99], level="nCPRO")])
         result["provCERA"] = recolocaTerrColumns(
-            auxDF[
-                auxDF.index.isin(values=[999], level="nCMUN")
-                & ~auxDF.index.isin(values=[99], level="nCPRO")
-            ]
-        )
+            auxDF[auxDF.index.isin(values=[999], level="nCMUN") & ~auxDF.index.isin(values=[99], level="nCPRO")])
 
     return result
 

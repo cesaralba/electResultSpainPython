@@ -32,7 +32,7 @@ def getFilenames(fileList):
 
             elType = reData.group(3)
             if (
-                elType != "10"
+                    elType != "10"
             ):  # El tipo 10 es uno que se da en municipales y que tiene metadata (que no funciona)
                 elTypeSet.add(elType)
             result["ficheros"][elType][fileType] = i
@@ -122,7 +122,7 @@ def retocaColumnas(df):
         if result[c].dtype == "object":
             result[c] = result[c].map(lambda x: x.strip()).astype("string")
 
-    if "CPRO" in result and not "CCA" in result:
+    if "CPRO" in result and "CCA" not in result:
         result["CCA"] = result["CPRO"].map(CPRO2CCA).astype("string")
 
     for c in col2numerize:
@@ -133,11 +133,7 @@ def retocaColumnas(df):
     for newCU, cuSpecs in buildCUs.items():
         if all([x in result.columns for x in cuSpecs["reqCols"]]):
             result[newCU] = result.apply(
-                lambda x: cuSpecs["frmStr"].format(
-                    **{k: x[k] for k in cuSpecs["reqCols"]}
-                ),
-                axis=1,
-            )
+                lambda x, specs=cuSpecs: specs["frmStr"].format(**{k: x[k] for k in specs["reqCols"]}), axis=1, )
             result["n" + newCU] = result[newCU].astype("int32")
 
     return result
