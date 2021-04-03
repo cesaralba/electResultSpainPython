@@ -1,3 +1,48 @@
+"""
+This module provides a mean to declare operations to perform on a dataframe using YAML files or plain variables
+
+Operations are:
+* Fixes: on rows that matches a condition (a column has a certain value), replaces the content of a column (may not be
+    the same).
+* Transformations: perform generic operations to columns. Operations covered are:
+  * Conversion to numeric. Inplace or creating a new column
+  * Change to upper case. Inplace or creating a new column
+  * Change to lower case. Inplace or creating a new column
+  * Concatenation of the content of several columns into a new one.
+* Validations: checks that the content of a column or a pair of columns meet some condition
+
+The operations come in a file (or variable) are lists of items of a single type (operation, validation or fix). The have the following formats:
+
+FIXES
+- condition: { colName1: value}
+  fix:       { colName2: newValue }
+
+The columns in both fields can be different
+The values can be either string or numeric
+
+TRANSFORMATIONS
+There are 4 operations covered:
+- 2numeric: #Converts to numeric
+    prefix: "myPrefix" #Optional if not provided transformation will be in place
+    cols: [listOfColumns]
+- upper: #Changes string to upper case
+    prefix: "myPrefix" #Optional if not provided transformation will be in place
+    cols: [listOfColumns]
+- lower: #Changes string to lower case
+    prefix: "myPrefix" #Optional if not provided transformation will be in place
+    cols: [listOfColumns]
+- concat:
+    newCol1: [cols2concat]
+    newCol2: [cols2concat]
+
+if a prefix is provided for the transformation, a new column named prefix + colName will be created. If it is not, transformation will be made inplace.
+
+VALIDATIONS:
+
+
+
+
+"""
 import pandas as pd
 import yaml
 from jsonschema import validate, Draft7Validator
@@ -12,9 +57,19 @@ SINGLECOLTRANSFORMNAMES = {"2numeric", "upper", "lower"}
 # TODO: Cambiar los print por logging
 
 
-def readFileAndValidateSchema(
-    fname, schema=None, semanticValidator=None, *args, **kwargs
-):
+def readFileAndValidateSchema(fname, schema=None, semanticValidator=None, *args, **kwargs):
+    """
+    Reads a YAML file, validates the format against an schema and, if provided the function, validates
+    the meaning of the file against the subject it will be used for.
+    :param fname: filename with data
+    :param schema: schema to validate the format of data against
+    :param semanticValidator: function to validate the content of the file against
+    :param args: parameters passed to semanticValidator
+    :param kwargs:  parameters passed to semanticValidator
+    :return: content of data
+
+    Raise an Exception something is wrong with the file
+    """
     with fileOpener(fname, "r") as handle:
         operations = yaml.safe_load(handle)
 
@@ -28,6 +83,12 @@ def readFileAndValidateSchema(
 
 
 def readDFerrorFixFile(fname, df=None):
+    """
+    Reads a file with fixes to the content of a dataframe and validates it.
+    :param fname:
+    :param df:
+    :return:
+    """
     operations = readFileAndValidateSchema(
         fname, schema=errorFixSchema, semanticValidator=validateDFerrorFix, df=df
     )
@@ -108,7 +169,7 @@ def validateDFtransform(operations, df):
 
     badOps = []
 
-    currCols = set(df.columns.to_list())
+    currCols = set(df.columns)
 
     for op in operations:
         manip, params = list(op.items())[0]
@@ -116,30 +177,25 @@ def validateDFtransform(operations, df):
             unknownCols = set()
             alreadyExistingCols = set()
 
-            prefix = params.get("prefix", None)
+            prefix = params.get("prefix", "")
 
-            if (
-                prefix
-            ):  # We are adding new columns so we must check new ones aren't already there
-                for col in params.get("cols", []):
-                    newCol = prefix + col
-                    if col not in currCols:
-                        unknownCols.add(col)
-                        continue
-                    if newCol in currCols:
-                        alreadyExistingCols.add(newCol)
-                        continue
-                    currCols.add(newCol)
-            else:  # Just check columns exist
-                unknownCols = checkColList(params.get("cols", []), colset=currCols)
+            for col in params.get("cols", []):
+                newCol = prefix + col
+                if col not in currCols:
+                    unknownCols.add(col)
+                    continue
+                if (newCol != col) and (newCol in currCols):
+                    alreadyExistingCols.add(newCol)
+                    continue
+                currCols.add(newCol)
 
             if unknownCols.union(alreadyExistingCols):
                 msg = (
-                    f"Problem with transform {op}. Unknown columns {sorted(unknownCols)}. "
-                    + f"Already existing columns: {sorted(alreadyExistingCols)}"
+                        f"Problem with transform {op}. Unknown columns {sorted(unknownCols)}. "
+                        + f"Already existing columns: {sorted(alreadyExistingCols)}"
                 )
-
                 badOps.append(msg)
+
         elif manip == "concat":
             badConcats = list()
 
@@ -160,8 +216,8 @@ def validateDFtransform(operations, df):
 
                 if flag:
                     msg = (
-                        f"concat: {concat}. Already existing column: {sorted(alreadyExistingCols)}. "
-                        + f"Unknown columns {sorted(unknownCols)}."
+                            f"concat: {concat}. Already existing column: {sorted(alreadyExistingCols)}. "
+                            + f"Unknown columns {sorted(unknownCols)}."
                     )
 
                     badConcats.append(msg)
@@ -294,7 +350,14 @@ def validatorResult2str(comps, df):
 
 
 def checkColList(collist, df=None, colset=None):
-    actColset = {} if colset is None else colset
+    """
+    Comprueba si un dataframe tiene un conjunto de columnas requeridas
+    :param collist: columnas deseadas
+    :param df: dataframe que comprobar
+    :param colset: lista de columnas (alternativo a df, toma precedencia df)
+    :return: elementos en collist que no están en las columnas de df (o en colset)
+    """
+    actColset = colset or {}
 
     DFcolumns = set(actColset) if df is None else set(df.columns)
     ruleColumns = set(collist)
