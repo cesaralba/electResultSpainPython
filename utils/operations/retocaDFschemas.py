@@ -4,9 +4,12 @@
 
 # TODO: UNITARIOS!
 
-regexColName = r"^[_a-zA-Z0-9]+$"
+regexColName = r"^[_a-zA-Z][_a-zA-Z0-9]*$"
 typeNumberOrValue = {"anyOf": [{"type": "string"}, {"type": "number"}]}
 typeColName = {"type": "string", "pattern": regexColName, "minLength": 1}
+
+monocolOpList = ["2numeric", "upper", "lower"]
+monocolTrfName = {"type": "string", "enum": monocolOpList}
 
 errorFixSchema = {
     "type": "array",
@@ -47,6 +50,7 @@ transformDFschema = {
             "properties": {"concat": {"$ref": "#/definitions/concatTrfParam"}},
             "additionalProperties": False,
         },
+
         "monocolTrfParam": {
             "type": "object",
             "properties": {
@@ -57,14 +61,11 @@ transformDFschema = {
         },
         "monocolTrfOp": {
             "type": "object",
-            "properties": {
-                "2numeric": {"$ref": "#/definitions/monocolTrfParam"},
-                "upper": {"$ref": "#/definitions/monocolTrfParam"},
-                "lower": {"$ref": "#/definitions/monocolTrfParam"},
-            },
+            "propertyNames": monocolTrfName,
+            "properties": {},
             "maxProperties": 1,
             "minProperties": 1,
-            "additionalProperties": False,
+            "additionalProperties": {"$ref": "#/definitions/monocolTrfParam"},
         },
         "dfOps": {
             "oneOf": [
