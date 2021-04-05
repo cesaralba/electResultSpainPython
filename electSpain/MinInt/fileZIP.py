@@ -153,76 +153,45 @@ def readFileZIP(filename):
     if setInfo["adjuntaFich02"]:
         result["elecInfo"] = dict(readPandaFWF(zh, files, elType, "02").T[0])
 
-    if setInfo["adjuntaFich03"]:
-        aux = readPandaFWF(zh, files, elType, "03")
-        aux = retocaColumnas(aux)
-        result["datosCandidatura"] = aux
+    datosFicheros1 = [(3, "datosCandidatura"),
+                      (4, "datosCandidatos"),
+                      (5, "datosMunic"),
+                      (6, "datosMunicResult"),
+                      (7, "datosSupMunic"),
+                      (8, "datosSupMunicResult"),
+                      (9, "datosMesas"),
+                      (10, "datosMesasResult")
+                      ]
 
-    if setInfo["adjuntaFich04"]:
-        aux = readPandaFWF(zh, files, elType, "04")
-        aux = retocaColumnas(aux)
-        result["datosCandidatos"] = aux
+    for i, clave in datosFicheros1:
+        claveSet = "adjuntaFich%02i" % i
+        tipoFich = "%02i" % i
 
-    if setInfo["adjuntaFich05"]:
-        aux = readPandaFWF(zh, files, elType, "05")
-        aux = retocaColumnas(aux)
-        result["datosMunic"] = aux
-
-    if setInfo["adjuntaFich06"]:
-        aux = readPandaFWF(zh, files, elType, "06")
-        aux = retocaColumnas(aux)
-        result["datosMunicResult"] = aux
-
-    if setInfo["adjuntaFich07"]:
-        aux = readPandaFWF(zh, files, elType, "07")
-        aux = retocaColumnas(aux)
-        result["datosSupMunic"] = aux
-
-    if setInfo["adjuntaFich08"]:
-        aux = readPandaFWF(zh, files, elType, "08")
-        aux = retocaColumnas(aux)
-        result["datosSupMunicResult"] = aux
-
-    if setInfo["adjuntaFich09"]:
-        aux = readPandaFWF(zh, files, elType, "09")
-        aux = retocaColumnas(aux)
-        result["datosMesas"] = aux
-
-    if setInfo["adjuntaFich10"]:
-        aux = readPandaFWF(zh, files, elType, "10")
-        aux = retocaColumnas(aux)
-        result["datosMesasResult"] = aux
+        if setInfo[claveSet]:
+            aux = readPandaFWF(zh, files, elType, tipoFich)
+            aux = retocaColumnas(aux)
+            result[clave] = aux
 
     if setInfo["tipoElec"] == "04":
-        if setInfo["adjuntaFich1104"]:
-            aux = readPandaFWF(zh, files, elType, "11")
+        for i, clave in [(11, "datosMunicPeq"), (12, "datosMunicPeqResult")]:
+            claveSet = "adjuntaFich%02i04" % i
+            tipoFich = "%02i" % i
+
+            if setInfo[claveSet]:
+                aux = readPandaFWF(zh, files, elType, tipoFich)
+                aux = retocaColumnas(aux)
+                result[clave] = aux
+
+    for iEle, iFich, clave in [(5, 10, "datosDipMunic"), (6, 10, "datosDipMunicResult"), (7, 10, "datosDipSupMunic"),
+                               (8, 10, "datosDipSupMunicResult")]:
+        claveSet = "adjuntaFich%02i%02i" % (iEle, iFich)
+        tipoEle = "%02i" % iEle
+        tipoFich = "%02i" % iFich
+
+        if setInfo[claveSet]:
+            aux = readPandaFWF(zh, files, tipoFich, tipoEle)
             aux = retocaColumnas(aux)
-            result["datosMunicPeq"] = aux
-
-        if setInfo["adjuntaFich1204"]:
-            aux = readPandaFWF(zh, files, elType, "12")
-            aux = retocaColumnas(aux)
-            result["datosMunicPeqResult"] = aux
-
-    if setInfo["adjuntaFich0510"]:
-        aux = readPandaFWF(zh, files, "10", "05")
-        aux = retocaColumnas(aux)
-        result["datosDipMunic"] = aux
-
-    if setInfo["adjuntaFich0610"]:
-        aux = readPandaFWF(zh, files, "10", "06")
-        aux = retocaColumnas(aux)
-        result["datosDipMunicResult"] = aux
-
-    if setInfo["adjuntaFich0710"]:
-        aux = readPandaFWF(zh, files, "10", "07")
-        aux = retocaColumnas(aux)
-        result["datosDipSupMunic"] = aux
-
-    if setInfo["adjuntaFich0810"]:
-        aux = readPandaFWF(zh, files, "10", "08")
-        aux = retocaColumnas(aux)
-        result["datosDipSupMunicResult"] = aux
+            result[clave] = aux
 
     # Elimina entradas que han dado problema con la carga
     return {clave: result[clave] for clave in result if result[clave] is not None}

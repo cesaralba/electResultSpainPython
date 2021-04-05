@@ -57,6 +57,7 @@ transformDFschema = {
                 "cols": {"$ref": "#/definitions/colList"},
             },
             "required": ["cols"],
+            "additionalProperties": False,
         },
         "monocolTrfOp": {
             "type": "object",
