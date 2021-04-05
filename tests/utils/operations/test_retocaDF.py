@@ -97,26 +97,41 @@ class Test_validateDFtransform(unittest.TestCase):
         with self.assertRaises(ValidationError):
             validateDFtransform(trf, DFin)
 
-    def testMonoOpsMissingCols(self):
+    def testMonoOpsMissingColsParam(self):
         trf = [{"2numeric": {"prefix": 'a'}}]
         with self.assertRaises(ValidationError):
             validateDFtransform(trf, DFin)
 
-    def testMonoOpsPrefixBadTypeCols(self):
-        trf = [{"2numeric": {"prefix": ['a']}}]
+    def testMonoOpsPrefixBadType(self):
+        trf = [{"2numeric": {"cols": ["c1"], "prefix": ['a']}}]
         with self.assertRaises(ValidationError):
             validateDFtransform(trf, DFin)
 
-    def testMonoOpsMissingCols(self):
-        trf = [{"2numeric": {"prefix": ['a']}}]
+    def testMonoOpsColsBadType(self):
+        trf = [{"2numeric": {"cols": "c1", "prefix": 'a'}}]
         with self.assertRaises(ValidationError):
             validateDFtransform(trf, DFin)
-
 
     def testMonoOpsExistingCols(self):
         trf = [{"lower": {"prefix": 'n', "cols": ['c6']}}]
         with self.assertRaises(ValueError):
             validateDFtransform(trf, DFin)
+
+    def testMonoOpsExistingCols2(self):
+        trf = [{"lower": {"prefix": 'n', "cols": ['c6', 'c1']}}]
+        with self.assertRaises(ValueError):
+            validateDFtransform(trf, DFin)
+
+    def testMonoOpsMissingCols(self):
+        trf = [{"lower": {"prefix": 'n', "cols": ['d6']}}]
+        with self.assertRaises(ValueError):
+            validateDFtransform(trf, DFin)
+
+    def testMonoOpsCompleteColsCase(self):
+        trf = [{"lower": {"prefix": 'n', "cols": ['c6', 'c1', 'd6']}}]
+        with self.assertRaises(ValueError):
+            validateDFtransform(trf, DFin)
+
 
 
 if __name__ == "__main__":
