@@ -174,59 +174,13 @@ def validateDFtransform(operations, df):
     for op in operations:
         manip, params = list(op.items())[0]
         if manip in SINGLECOLTRANSFORMNAMES:
-            unknownCols = set()
-            alreadyExistingCols = set()
-
-            prefix = params.get("prefix", "")
-
-            for col in params.get("cols", []):
-                newCol = prefix + col
-                if col not in currCols:
-                    unknownCols.add(col)
-                    continue
-                if (newCol != col) and (newCol in currCols):
-                    alreadyExistingCols.add(newCol)
-                    continue
-                currCols.add(newCol)
-
-            if unknownCols.union(alreadyExistingCols):
-                msg = (
-                        f"Problem with transform {op}. Unknown columns {sorted(unknownCols)}. "
-                        + f"Already existing columns: {sorted(alreadyExistingCols)}"
-                )
-                badOps.append(msg)
+            currCols, errMsgs = trfValidMonocolOp(op, params, currCols)
+            badOps = badOps + errMsgs
 
         elif manip == "concat":
-            badConcats = list()
+            currCols, errMsgs = trfValidConcatOp(params, currCols)
+            badOps = badOps + errMsgs
 
-            for concat in params.items():
-                flag = False
-                newCol, cols2add = concat
-                unknownCols = set()
-                alreadyExistingCols = set()
-
-                if newCol in currCols:
-                    alreadyExistingCols.add(newCol)
-                    flag = True
-
-                auxUnknown = checkColList(cols2add, colset=currCols)
-                if auxUnknown:
-                    unknownCols.update(auxUnknown)
-                    flag = True
-
-                if flag:
-                    msg = (
-                            f"concat: {concat}. Already existing column: {sorted(alreadyExistingCols)}. "
-                            + f"Unknown columns {sorted(unknownCols)}."
-                    )
-
-                    badConcats.append(msg)
-                    continue
-
-                currCols.add(newCol)
-            if badConcats:
-                msg = f'Problem with concats: {", ".join(badConcats)}'
-                badOps.append(msg)
         else:
             print(f"validateDFtransform: operacion desconocida '{manip}': {op}")
 
@@ -236,6 +190,54 @@ def validateDFtransform(operations, df):
         )
 
     return True
+
+
+def trfValidConcatOp(params, currCols):
+    badOps = []
+    badConcats = list()
+    for concatGroup in params.items():
+        newCol, cols2add = concatGroup
+
+        alreadyExistingCols = set(newCol).intersection(currCols)
+        unknownCols = set(cols2add).difference(currCols)
+
+        if alreadyExistingCols.union(unknownCols):
+            msg = (
+                    f"concat: {concatGroup}. Already existing column: {sorted(alreadyExistingCols)}. "
+                    + f"Unknown columns {sorted(unknownCols)}."
+            )
+
+            badConcats.append(msg)
+            continue
+
+        currCols.add(newCol)
+    if badConcats:
+        msg = f'Problem with concats: {", ".join(badConcats)}'
+        badOps.append(msg)
+
+    return currCols, badOps
+
+
+def trfValidMonocolOp(op, params, currCols):
+    badOps = []
+
+    alreadyExistingCols = set()
+    prefix = params.get("prefix", "")
+    colList = set(params.get("cols", []))
+    unknownCols = colList.difference(currCols)
+    remainingCols = colList.intersection(currCols)
+    if prefix != "":
+        newColList = set(map(lambda s, pref=prefix: pref + s, remainingCols))
+        alreadyExistingCols.update(newColList.intersection(currCols))
+        currCols.update(newColList)
+    if unknownCols.union(alreadyExistingCols):
+        msg = (
+                f"Problem with transform {op}. Unknown columns {sorted(unknownCols)}. "
+                + f"Already existing columns: {sorted(alreadyExistingCols)}"
+        )
+        badOps.append(msg)
+
+    return currCols, badOps
 
 
 def applyDFtransforms(df, operations):
@@ -248,16 +250,11 @@ def applyDFtransforms(df, operations):
         manip, params = list(op.items())[0]
 
         if manip in SINGLECOLTRANSFORMNAMES:
-            prefix = params.get("prefix", None)
+            prefix = params.get("prefix", "")
             for col in params.get("cols", []):
-                newCol = col if prefix is None else (prefix + col)
+                newCol = prefix + col
 
-                if manip == "2numeric":
-                    df[newCol] = pd.to_numeric(df[col])
-                elif manip == "upper":
-                    df[newCol] = df[col].str.upper()
-                elif manip == "lower":
-                    df[newCol] = df[col].str.lower()
+                df[newCol] = trfMonocolOp(manip, df, col)
 
         elif manip == "concat":
             for newCol, cols2add in params.items():
@@ -269,6 +266,19 @@ def applyDFtransforms(df, operations):
             print(f"applyDFtransforms: operación desconocida '{manip}': {op}")
 
     return df
+
+
+def trfMonocolOp(manip: str, df: pd.DataFrame, col: str):
+    if manip == "2numeric":
+        result = pd.to_numeric(df[col])
+    elif manip == "upper":
+        result = df[col].str.upper()
+    elif manip == "lower":
+        result = df[col].str.lower()
+    else:
+        raise ValueError(f"trfMonocolOp: unknown op {manip}")
+
+    return result
 
 
 def readDFvalidatorFile(fname, df=None):
