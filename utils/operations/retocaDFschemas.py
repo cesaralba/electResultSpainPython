@@ -9,7 +9,7 @@ typeNumberOrValue = {"anyOf": [{"type": "string"}, {"type": "number"}]}
 typeColName = {"type": "string", "pattern": regexColName, "minLength": 1}
 
 monocolOpList = ["2numeric", "upper", "lower"]
-monocolTrfName = {"type": "string", "enum": monocolOpList}
+monocolOpProperties = {k: {"$ref": "#/definitions/monocolTrfParam"} for k in monocolOpList}
 
 errorFixSchema = {
     "type": "array",
@@ -50,7 +50,6 @@ transformDFschema = {
             "properties": {"concat": {"$ref": "#/definitions/concatTrfParam"}},
             "additionalProperties": False,
         },
-
         "monocolTrfParam": {
             "type": "object",
             "properties": {
@@ -61,11 +60,10 @@ transformDFschema = {
         },
         "monocolTrfOp": {
             "type": "object",
-            "propertyNames": monocolTrfName,
-            "properties": {},
+            "properties": monocolOpProperties,
             "maxProperties": 1,
             "minProperties": 1,
-            "additionalProperties": {"$ref": "#/definitions/monocolTrfParam"},
+            "additionalProperties": False,
         },
         "dfOps": {
             "oneOf": [

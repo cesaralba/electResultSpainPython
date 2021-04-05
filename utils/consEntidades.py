@@ -44,9 +44,6 @@ def consolidaPartidosIntraperiodo(df, claveDisc=None, trads=None):
 
     dfAux = df.partidos[targKeys].copy()
 
-    # print(dfAux)
-    # print(dfAux[df[claveDisc] != 99])
-
     # El codigo 99 (o 999) es la agregación
     filAgr = dfAux[df[claveDisc] == 99].sum(axis=0)
     filInd = dfAux[df[claveDisc] != 99].sum(axis=0)
